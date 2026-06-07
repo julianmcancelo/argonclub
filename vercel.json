@@ -1,6 +1,6 @@
 {
   "buildCommand": "bash vercel_build.sh",
-  "outputDirectory": "build/web",
+  "outputDirectory": "public",
   "rewrites": [
     {
       "source": "/bixplay-api/(.*)",

@@ -14,4 +14,8 @@ flutter pub get
 echo "--- Compilando la aplicacion ---"
 flutter build web --release
 
+echo "--- Preparando archivos para Vercel ---"
+rm -rf public
+cp -R build/web public
+
 echo "--- Compilacion finalizada con exito ---"
