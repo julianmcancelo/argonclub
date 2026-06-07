@@ -24,7 +24,7 @@ class ApiClient {
         if (url.startsWith('https://vimeus.com/api/')) {
           return url.replaceFirst('https://vimeus.com/api/', '/vimeus-api/');
         } else if (url.startsWith('https://vimeus.com/e/')) {
-          return url.replaceFirst('https://vimeus.com/e/', '/vimeus-embed/');
+          return '/api/proxy?url=${Uri.encodeComponent(url)}';
         } else if (url.startsWith('https://server.bixplay.online/')) {
           return url.replaceFirst('https://server.bixplay.online/', '/bixplay-server/');
         } else if (url.startsWith('https://appnew2.bixplay.online/rest-api/v100/')) {
@@ -32,8 +32,12 @@ class ApiClient {
         } else if (url.startsWith('https://appnew2.bixplay.online/api/')) {
           return url.replaceFirst('https://appnew2.bixplay.online/api/', '/bixplay-search/');
         }
+        
+        // Proxy any other external URL through Vercel Serverless Function to bypass CORS
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          return '/api/proxy?url=${Uri.encodeComponent(url)}';
+        }
       }
-      // Local dev - relying on --disable-web-security flag
       return url;
     }
     return url;
