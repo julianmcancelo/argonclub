@@ -456,7 +456,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       }
 
       final response = await dio.get<String>(
-        ApiClient.wrapUrl(_activeVideoUrl),
+        ApiClient.wrapScraperUrl(_activeVideoUrl),
         options: Options(
           responseType: ResponseType.plain,
           headers: requestHeaders,
@@ -488,7 +488,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           
           final apiUrl = '$streamEndpoint?action=get_stream&stream_token=${Uri.encodeComponent(streamToken)}';
           final apiRes = await dio.get(
-            ApiClient.wrapUrl(apiUrl),
+            ApiClient.wrapScraperUrl(apiUrl),
             options: Options(
               headers: kIsWeb ? {} : {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -866,9 +866,17 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       _statusMessage = 'Cargando video...';
     });
 
+    final Map<String, String> playerHeaders = {..._activeHeaders};
+    if (kIsWeb) {
+      playerHeaders.removeWhere((key, value) {
+        final lower = key.toLowerCase();
+        return lower == 'user-agent' || lower == 'referer' || lower == 'origin' || lower == 'host';
+      });
+    }
+
     _videoPlayerController = VideoPlayerController.networkUrl(
       Uri.parse(wrappedUrl),
-      httpHeaders: _activeHeaders,
+      httpHeaders: playerHeaders,
     );
 
     try {

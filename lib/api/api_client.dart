@@ -32,15 +32,25 @@ class ApiClient {
         } else if (url.startsWith('https://appnew2.bixplay.online/api/')) {
           return url.replaceFirst('https://appnew2.bixplay.online/api/', '/bixplay-search/');
         }
-        
-        // Proxy any other external URL through Vercel Serverless Function to bypass CORS
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-          return '/api/proxy?url=${Uri.encodeComponent(url)}';
-        }
       }
       return url;
     }
     return url;
+  }
+
+  static String wrapScraperUrl(String url) {
+    if (kIsWeb && kReleaseMode) {
+      if (url.startsWith('https://vimeus.com/e/')) {
+        return '/api/proxy?url=${Uri.encodeComponent(url)}';
+      }
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        // Prevent double proxying
+        if (!url.contains('/api/proxy') && !url.contains('bixplay.online')) {
+          return '/api/proxy?url=${Uri.encodeComponent(url)}';
+        }
+      }
+    }
+    return wrapUrl(url);
   }
 
   final Dio _dio;
