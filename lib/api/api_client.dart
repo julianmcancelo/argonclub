@@ -81,15 +81,17 @@ class ApiClient {
             receiveTimeout: const Duration(seconds: 12),
           ),
         ) {
-    _dio.interceptors.add(LogInterceptor(
-      request: true,
-      requestHeader: true,
-      requestBody: true,
-      responseHeader: true,
-      responseBody: true,
-      error: true,
-      logPrint: print,
-    ));
+    if (!kReleaseMode) {
+      _dio.interceptors.add(LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
+        error: true,
+        logPrint: print,
+      ));
+    }
 
     if (kIsWeb) {
       final corsInterceptor = InterceptorsWrapper(

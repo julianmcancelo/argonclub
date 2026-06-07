@@ -11,8 +11,8 @@ flutter config --enable-web
 echo "--- Instalando dependencias ---"
 flutter pub get
 
-echo "--- Compilando la aplicacion ---"
-flutter build web --release
+echo "--- Compilando la aplicacion (Optimizada para Smart TV / Baja Potencia) ---"
+flutter build web --release --web-renderer html --tree-shake-icons --no-source-maps
 
 echo "--- Preparando archivos para Vercel ---"
 rm -rf public
