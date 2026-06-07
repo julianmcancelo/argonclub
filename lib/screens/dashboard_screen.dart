@@ -962,13 +962,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     () => _navigateToPage(const HomeScreen(apiEndpoint: 'tvseries', title: 'Series')),
                     focusOrder: const NumericFocusOrder(3),
                   ),
-                  SizedBox(width: 12 * tvScale),
-                  _buildTopNavItem(
-                    'TV en Vivo',
-                    isTV,
-                    () => _navigateToPage(const HomeScreen(apiEndpoint: 'live', title: 'TV en Vivo')),
-                    focusOrder: const NumericFocusOrder(4),
-                  ),
+
                   SizedBox(width: 12 * tvScale),
                   _buildTopNavItem(
                     'Mi Lista',
@@ -1811,27 +1805,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               initialCategory: SeriesCategory.novelas,
             )),
       },
-      {
-        'title': 'TV en Vivo',
-        'icon': Icons.live_tv_outlined,
-        'subtitle': 'canales',
-        'accent': accentTV,
-        'onTap': () => _navigateToPage(const HomeScreen(apiEndpoint: 'live', title: 'TV en Vivo')),
-      },
-      {
-        'title': 'Buscar',
-        'icon': Icons.search_rounded,
-        'subtitle': 'global',
-        'accent': accentBuscar,
-        'onTap': () => _navigateToPage(const SearchScreen()),
-      },
-      {
-        'title': 'Unirse a sala',
-        'icon': Icons.groups_rounded,
-        'subtitle': 'watch party',
-        'accent': accentSeries,
-        'onTap': _showQuickJoinWatchParty,
-      },
     ];
     _ensureCategoryFocusNodes(categories.length);
 
@@ -1864,10 +1837,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              const crossAxisCount = 5;
-              final spacing = 12.0 * tvScale;
+              const crossAxisCount = 4; // Adjust to 4 since we removed 3 items
+              final spacing = 16.0 * tvScale; // Increased spacing for premium look
               final tileWidth = (width - ((crossAxisCount - 1) * spacing)) / crossAxisCount;
-              final tileHeight = tileWidth * 0.64;
+              final tileHeight = tileWidth * 0.60; // Slightly shorter for cinematic look
               final ratio = tileWidth / tileHeight;
 
               return FocusTraversalGroup(
@@ -1927,10 +1900,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           child: Row(
             children: categories.map((cat) {
               return Padding(
-                padding: const EdgeInsets.only(right: 14.0),
+                padding: const EdgeInsets.only(right: 16.0),
                 child: SizedBox(
-                  width: 150,
-                  height: 100,
+                  width: 170, // Increased size for a more premium look
+                  height: 110,
                   child: _buildGlassHubCard(
                     title: cat['title'] as String,
                     subtitle: cat['subtitle'] as String,
@@ -1998,15 +1971,16 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: focused 
-                      ? accentColor.withOpacity(0.60)
-                      : colorLine,
-                  width: focused ? 2.0 : 1.0,
+                      ? Colors.white
+                      : colorLine.withOpacity(0.3),
+                  width: focused ? 3.0 : 1.0,
                 ),
                 boxShadow: focused
                     ? [
                         BoxShadow(
-                          color: accentColor.withOpacity(0.40),
-                          blurRadius: 20,
+                          color: Colors.white.withOpacity(0.25),
+                          blurRadius: 25,
+                          spreadRadius: 2,
                         )
                       ]
                     : [],
@@ -2035,12 +2009,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               width: isTV ? 38 : 38,
                               height: isTV ? 38 : 38,
                               decoration: BoxDecoration(
-                                color: accentColor.withOpacity(0.18),
+                                color: Colors.white.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: accentColor.withOpacity(0.30), width: 1.2),
+                                border: Border.all(color: Colors.white.withOpacity(0.20), width: 1.0),
                               ),
                               alignment: Alignment.center,
-                              child: Icon(icon, color: accentColor, size: isTV ? 20 : 20),
+                              child: Icon(icon, color: Colors.white, size: isTV ? 20 : 20),
                             ),
                           ],
                         ),
@@ -2302,14 +2276,15 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: focused ? colorBrandB : colorLine,
-                        width: focused ? 2.5 : 1.0,
+                        color: focused ? Colors.white : colorLine,
+                        width: focused ? 3.0 : 1.0,
                       ),
                       boxShadow: focused
                           ? [
                               BoxShadow(
-                                color: colorBrandB.withOpacity(0.35),
-                                blurRadius: 15,
+                                color: Colors.white.withOpacity(0.25),
+                                blurRadius: 25,
+                                spreadRadius: 2,
                               )
                             ]
                           : [],
@@ -2528,14 +2503,15 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: focused ? colorBrandA : colorLine,
-                        width: focused ? 2.5 : 1.0,
+                        color: focused ? Colors.white : colorLine,
+                        width: focused ? 3.0 : 1.0,
                       ),
                       boxShadow: focused
                           ? [
                               BoxShadow(
-                                color: colorBrandA.withOpacity(0.35),
-                                blurRadius: 15,
+                                color: Colors.white.withOpacity(0.25),
+                                blurRadius: 25,
+                                spreadRadius: 2,
                               )
                             ]
                           : [],
