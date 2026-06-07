@@ -1,5 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../services/remote_control_service.dart';
+import 'dashboard_screen.dart' show DashboardScreen;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../services/remote_control_service.dart';
 
@@ -18,6 +22,7 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
   bool _paired = false;
   String? _pairingCode;
   String? _error;
+  Timer? _retryTimer;
 
   @override
   void initState() {
@@ -61,6 +66,14 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
           final isTV = MediaQuery.of(context).size.width > 960;
           if (isTV) {
             _service.registerTv();
+            // Retry every 5 seconds if code is still null
+            _retryTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+              if (_pairingCode == null && _service.isConnected) {
+                _service.registerTv();
+              } else if (_pairingCode != null) {
+                timer.cancel();
+              }
+            });
           }
         }
       });
@@ -85,6 +98,7 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
 
   @override
   void dispose() {
+    _retryTimer?.cancel();
     _service.dispose();
     _codeController.dispose();
     _searchController.dispose();
@@ -134,11 +148,14 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
     return Center(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 600),
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.02),
+          color: const Color(0xB3121215), // colorGlass
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          boxShadow: [
+             BoxShadow(color: Colors.white.withOpacity(0.05), blurRadius: 40)
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -182,21 +199,44 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
               ),
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
                 decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFF97316).withOpacity(0.3)),
+                  color: Colors.black.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.15)),
+                  boxShadow: _pairingCode != null ? [
+                    BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 20)
+                  ] : [],
                 ),
-                child: Text(
-                  _pairingCode ?? 'Cargando...',
-                  style: GoogleFonts.sora(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 8,
-                    color: const Color(0xFFF97316),
-                  ),
-                ),
+                child: _pairingCode != null
+                  ? Text(
+                      _pairingCode!,
+                      style: GoogleFonts.sora(
+                        fontSize: 56,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 16,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 24, height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Conectando...',
+                          style: GoogleFonts.sora(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 4,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
               ),
               const SizedBox(height: 24),
               Text(
