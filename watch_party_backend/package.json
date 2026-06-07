@@ -1,0 +1,22 @@
+{
+  "name": "zuper-watch-party-backend",
+  "version": "1.0.0",
+  "description": "Watch Party backend for synchronized viewing",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["watch-party", "websocket", "streaming"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.15.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.1"
+  }
+}

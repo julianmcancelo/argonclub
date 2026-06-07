@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: zuper-watch-party
+    runtime: node
+    rootDir: watch_party_backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health

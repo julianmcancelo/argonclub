@@ -1,0 +1,40 @@
+[[plugins]]
+  package = "netlify-plugin-flutter"
+
+[plugins.inputs]
+  channel = "stable"
+
+[build]
+  command = "flutter build web --release"
+  publish = "build/web"
+
+[[redirects]]
+  from = "/bixplay-api/*"
+  to = "https://appnew2.bixplay.online/rest-api/v100/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/bixplay-search/*"
+  to = "https://appnew2.bixplay.online/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/vimeus-api/*"
+  to = "https://vimeus.com/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/vimeus-embed/*"
+  to = "https://vimeus.com/e/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/bixplay-server/*"
+  to = "https://server.bixplay.online/:splat"
+  status = 200
+  force = true
+
