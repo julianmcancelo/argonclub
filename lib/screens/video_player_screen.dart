@@ -19,7 +19,7 @@ import 'dart:async';
 import 'dart:ui';
 import '../api/api_client.dart';
 import 'details_screen.dart';
-
+import '../widgets/cast_device_dialog.dart';
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
   final bool isDirect;
@@ -1601,7 +1601,28 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
               top: isTV ? 26 : 14,
               right: isTV ? 24 : 12,
               child: SafeArea(
-                child: _buildWatchPartyChip(isTV),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!_isLoading)
+                      IconButton(
+                        icon: const Icon(Icons.cast_rounded, color: Colors.white, size: 28),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (context) => CastDeviceDialog(
+                              videoUrl: _activeVideoUrl,
+                              videoTitle: widget.mediaTitle ?? 'Video',
+                            ),
+                          );
+                        },
+                      ),
+                    const SizedBox(width: 8),
+                    _buildWatchPartyChip(isTV),
+                  ],
+                ),
               ),
             ),
             if (_transportOverlayText.isNotEmpty)
