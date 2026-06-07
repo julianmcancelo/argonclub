@@ -2365,10 +2365,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                 ],
               ),
             ),
-          );
-        },
-      ),
-    );
+          ),
+        );
   }
 
   // Skeleton Loader for resolved servers loading state
@@ -2417,7 +2415,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
     return TvFocusableItem(
       onPressed: () => _handlePlayEpisode(episode),
-      focusColor: colorBrandA,
+      focusColor: _crimsonSoft,
       scaleOnFocus: 1.02,
       borderRadius: BorderRadius.circular(16),
       padding: const EdgeInsets.only(bottom: 12),
@@ -2468,15 +2466,12 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                     : null,
                 trailing: Icon(
                   Icons.play_circle_fill, 
-                  color: focused ? colorBrandA : Colors.white54, 
+                  color: Colors.white54, 
                   size: isTV ? 36 : 28
                 ),
               ),
             ),
-          );
-        },
-      ),
-    );
+        );
   }
 }
 
