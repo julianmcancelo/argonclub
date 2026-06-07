@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../widgets/tv_focusable_item.dart';
 import '../api/api_client.dart';
 import 'details_screen.dart';
 
@@ -103,46 +104,31 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Widget _actionChip(String label, IconData icon, VoidCallback onTap, bool isTV) {
-    return Focus(
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent &&
-            (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.select)) {
-          onTap();
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-      child: Builder(
-        builder: (context) {
-          final focused = Focus.of(context).hasFocus;
-          return GestureDetector(
-            onTap: onTap,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              padding: EdgeInsets.symmetric(horizontal: isTV ? 16 : 12, vertical: isTV ? 12 : 10),
-              decoration: BoxDecoration(
-                color: focused ? Colors.purpleAccent.withOpacity(0.3) : Colors.white10,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: focused ? Colors.purpleAccent : Colors.white24),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, color: Colors.white, size: isTV ? 20 : 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: isTV ? 16 : 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+    return TvFocusableItem(
+      onPressed: onTap,
+      focusColor: Colors.purpleAccent,
+      borderRadius: BorderRadius.circular(12),
+      scaleOnFocus: 1.05,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: isTV ? 16 : 12, vertical: isTV ? 12 : 10),
+        decoration: BoxDecoration(
+          color: Colors.white10,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: isTV ? 20 : 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isTV ? 16 : 14,
+                fontWeight: FontWeight.w700,
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -227,71 +213,48 @@ class _DashboardCardState extends State<_DashboardCard> {
         '';
     final title = widget.item['title'] ?? widget.item['tv_name'] ?? widget.item['channel_name'] ?? 'Contenido';
 
-    return Focus(
+    return TvFocusableItem(
       autofocus: widget.autofocus,
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent &&
-            (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.select)) {
-          _openDetails(context);
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-      child: FocusableActionDetector(
-        onShowFocusHighlight: (value) {
-          if (_focused != value) {
-            setState(() => _focused = value);
-          }
-        },
-        child: GestureDetector(
-          onTap: () => _openDetails(context),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            width: widget.isTV ? 165 : 140,
-            transform: _focused ? (Matrix4.identity()..scale(1.03)) : Matrix4.identity(),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _focused ? Colors.purpleAccent : Colors.white24, width: _focused ? 2 : 1),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.medium,
-                    memCacheWidth: widget.isTV ? 420 : 240,
-                    placeholder: (context, url) => Container(color: Colors.grey[900]),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[850],
-                      child: const Icon(Icons.movie, color: Colors.white54),
-                    ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      color: Colors.black.withOpacity(0.7),
-                      child: Text(
-                        title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: widget.isTV ? 13 : 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+      onPressed: () => _openDetails(context),
+      focusColor: Colors.purpleAccent,
+      borderRadius: BorderRadius.circular(12),
+      scaleOnFocus: 1.05,
+      child: SizedBox(
+        width: widget.isTV ? 165 : 140,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.medium,
+              memCacheWidth: widget.isTV ? 420 : 240,
+              placeholder: (context, url) => Container(color: Colors.grey[900]),
+              errorWidget: (context, url, error) => Container(
+                color: Colors.grey[850],
+                child: const Icon(Icons.movie, color: Colors.white54),
               ),
             ),
-          ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                color: Colors.black.withOpacity(0.7),
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: widget.isTV ? 13 : 12,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

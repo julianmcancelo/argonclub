@@ -14,6 +14,7 @@ import '../services/watch_party_prefs.dart';
 import '../services/watch_party_service.dart';
 import 'video_player_screen.dart';
 import 'watch_party_lobby_screen.dart';
+import '../widgets/tv_focusable_item.dart';
 
 class DetailsScreen extends StatefulWidget {
   final dynamic itemData;
@@ -2209,61 +2210,36 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     required VoidCallback onTap,
     VoidCallback? onLongPress,
   }) {
-    return Focus(
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent &&
-            (event.logicalKey == LogicalKeyboardKey.enter ||
-                event.logicalKey == LogicalKeyboardKey.select)) {
-          onTap();
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-      child: Builder(
-        builder: (context) {
-          final focused = Focus.of(context).hasFocus;
-          final serverName = server['name'] as String? ?? 'SERVIDOR';
-          final isTop = serverName.contains('TOP') || serverName.contains('RÁPIDO') || index == 0;
-          final healthTag = _serverHealthTag(server);
-          
-          return GestureDetector(
-            onTap: onTap,
-            onLongPress: onLongPress,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              margin: const EdgeInsets.only(bottom: 12),
-              transform: focused ? (Matrix4.identity()..scale(1.03)) : Matrix4.identity(),
-              transformAlignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: focused ? [_surface, _surfaceSoft] : [_surfaceSoft, const Color(0xCC101013)],
-                ),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: focused ? _crimsonSoft : _line,
-                  width: focused ? 2.2 : 1.1,
-                ),
-                boxShadow: focused
-                    ? [
-                        BoxShadow(
-                          color: _crimson.withOpacity(0.28),
-                          blurRadius: 18,
-                          spreadRadius: 1.5,
-                        )
-                      ]
-                    : [],
-              ),
-              child: Row(
+    final serverName = server['name'] as String? ?? 'SERVIDOR';
+    final isTop = serverName.contains('TOP') || serverName.contains('RÁPIDO') || index == 0;
+    final healthTag = _serverHealthTag(server);
+    
+    return TvFocusableItem(
+      autofocus: index == 0,
+      onPressed: onTap,
+      focusColor: _crimsonSoft,
+      scaleOnFocus: 1.03,
+      borderRadius: BorderRadius.circular(18),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onLongPress: onLongPress,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_surfaceSoft, const Color(0xCC101013)],
+            ),
+          ),
+          child: Row(
                 children: [
                   // Index Circle Badge
                   Container(
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: focused ? _crimson : Colors.white.withOpacity(0.08),
+                      color: _crimson.withOpacity(0.5),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -2439,42 +2415,17 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     final epImage = episode['image_url'] ?? '';
     final epDesc = episode['episodes_description'] ?? '';
 
-    return Focus(
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent &&
-            (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.select)) {
-          _handlePlayEpisode(episode);
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-      child: Builder(
-        builder: (context) {
-          final focused = Focus.of(context).hasFocus;
-          return GestureDetector(
-            onTap: () => _handlePlayEpisode(episode),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              margin: const EdgeInsets.only(bottom: 12),
-              transform: focused ? (Matrix4.identity()..scale(1.02)) : Matrix4.identity(),
-              transformAlignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: focused ? const Color(0xFF131320) : const Color(0xFF0F0F18),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: focused ? colorBrandA : _line,
-                  width: focused ? 2.0 : 1.5,
-                ),
-                boxShadow: focused
-                    ? [
-                        BoxShadow(
-                          color: colorBrandA.withOpacity(0.25),
-                          blurRadius: 12,
-                        )
-                      ]
-                    : [],
-              ),
-              child: ListTile(
+    return TvFocusableItem(
+      onPressed: () => _handlePlayEpisode(episode),
+      focusColor: colorBrandA,
+      scaleOnFocus: 1.02,
+      borderRadius: BorderRadius.circular(16),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF0F0F18),
+        ),
+        child: ListTile(
                 contentPadding: EdgeInsets.all(isTV ? 12 : 8),
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(10),

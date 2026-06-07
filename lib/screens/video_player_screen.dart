@@ -1110,12 +1110,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.mediaPlayPause ||
-        key == LogicalKeyboardKey.space) {
+        key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.select) {
       _togglePlayPause();
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.home) {
       _restartPlayback();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.escape || key == LogicalKeyboardKey.backspace) {
+      if (mounted) {
+        Navigator.pop(context);
+      }
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
