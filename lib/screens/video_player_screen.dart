@@ -447,7 +447,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       if (kIsWeb) {
         requestHeaders.removeWhere((key, value) {
           final lower = key.toLowerCase();
-          return lower == 'user-agent' || lower == 'referer' || lower == 'origin' || lower == 'host';
+          return const [
+            'user-agent', 'referer', 'origin', 'host', 
+            'accept-encoding', 'connection', 'accept', 
+            'accept-language', 'cookie', 'sec-fetch-dest',
+            'sec-fetch-mode', 'sec-fetch-site'
+          ].contains(lower);
         });
       }
       if (!kIsWeb && _activeVideoUrl.contains('h5_player')) {
@@ -870,7 +875,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (kIsWeb) {
       playerHeaders.removeWhere((key, value) {
         final lower = key.toLowerCase();
-        return lower == 'user-agent' || lower == 'referer' || lower == 'origin' || lower == 'host';
+        return const [
+          'user-agent', 'referer', 'origin', 'host', 
+          'accept-encoding', 'connection', 'accept', 
+          'accept-language', 'cookie', 'sec-fetch-dest',
+          'sec-fetch-mode', 'sec-fetch-site'
+        ].contains(lower);
       });
     }
 

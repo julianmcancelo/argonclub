@@ -40,12 +40,9 @@ class ApiClient {
 
   static String wrapScraperUrl(String url) {
     if (kIsWeb && kReleaseMode) {
-      if (url.startsWith('https://vimeus.com/e/')) {
-        return '/api/proxy?url=${Uri.encodeComponent(url)}';
-      }
       if (url.startsWith('http://') || url.startsWith('https://')) {
         // Prevent double proxying
-        if (!url.contains('/api/proxy') && !url.contains('bixplay.online')) {
+        if (!url.contains('/api/proxy')) {
           return '/api/proxy?url=${Uri.encodeComponent(url)}';
         }
       }
