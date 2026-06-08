@@ -21,6 +21,10 @@
     {
       "source": "/bixplay-server/(.*)",
       "destination": "https://server.bixplay.online/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

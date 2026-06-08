@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:cast/cast.dart';
 import 'package:dlna_dart/dlna.dart';
 import 'package:dlna_dart/xmlParser.dart';
 
-enum CastDeviceType { chromecast, dlna }
+enum CastDeviceType { dlna }
 
 class CastDeviceModel {
   final String id;
@@ -28,9 +27,7 @@ class CastingService extends ChangeNotifier {
   List<CastDeviceModel> devices = [];
   bool isSearching = false;
   CastDeviceModel? connectedDevice;
-  CastSession? _castSession;
   DLNADevice? _dlnaDevice;
-
   StreamSubscription? _dlnaSub;
 
   void startDiscovery() {
@@ -39,7 +36,6 @@ class CastingService extends ChangeNotifier {
     devices.clear();
     notifyListeners();
 
-    _discoverChromecasts();
     _discoverDLNA();
   }
 
@@ -47,25 +43,6 @@ class CastingService extends ChangeNotifier {
     isSearching = false;
     _dlnaSub?.cancel();
     notifyListeners();
-  }
-
-  Future<void> _discoverChromecasts() async {
-    try {
-      final castDevices = await CastDiscoveryService().search();
-      for (var device in castDevices) {
-        if (!devices.any((d) => d.id == device.host)) {
-          devices.add(CastDeviceModel(
-            id: device.host,
-            name: device.name,
-            type: CastDeviceType.chromecast,
-            originalDevice: device,
-          ));
-          notifyListeners();
-        }
-      }
-    } catch (e) {
-      debugPrint("Error discovering Chromecast: $e");
-    }
   }
 
   void _discoverDLNA() async {
@@ -95,28 +72,7 @@ class CastingService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (device.type == CastDeviceType.chromecast) {
-        final castDevice = device.originalDevice as CastDevice;
-        _castSession = await CastSessionManager().startSession(castDevice);
-        
-        var message = {
-          'type': 'LOAD',
-          'autoPlay': true,
-          'currentTime': 0,
-          'media': {
-            'contentId': videoUrl,
-            'contentType': videoUrl.endsWith('.m3u8') ? 'application/x-mpegurl' : 'video/mp4',
-            'streamType': 'BUFFERED',
-            'metadata': {
-              'type': 0,
-              'metadataType': 0,
-              'title': title,
-            }
-          }
-        };
-        _castSession?.sendMessage('urn:x-cast:com.google.cast.media', message);
-
-      } else if (device.type == CastDeviceType.dlna) {
+      if (device.type == CastDeviceType.dlna) {
         _dlnaDevice = device.originalDevice as DLNADevice;
         await _dlnaDevice?.setUrl(videoUrl, title: title, type: PlayType.Video);
         await _dlnaDevice?.play();
@@ -130,11 +86,9 @@ class CastingService extends ChangeNotifier {
 
   void disconnect() {
     try {
-      _castSession?.close();
       _dlnaDevice?.stop();
     } catch (_) {}
     connectedDevice = null;
-    _castSession = null;
     _dlnaDevice = null;
     notifyListeners();
   }

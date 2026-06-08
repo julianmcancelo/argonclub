@@ -126,9 +126,7 @@ class _CastDeviceDialogState extends State<CastDeviceDialog> {
                         child: Row(
                           children: [
                             Icon(
-                              device.type == CastDeviceType.chromecast
-                                  ? Icons.cast_connected_rounded
-                                  : Icons.tv_rounded,
+                              Icons.tv_rounded,
                               color: const Color(0xFFF97316),
                             ),
                             const SizedBox(width: 16),
@@ -144,7 +142,7 @@ class _CastDeviceDialogState extends State<CastDeviceDialog> {
                                     ),
                                   ),
                                   Text(
-                                    device.type == CastDeviceType.chromecast ? 'Chromecast' : 'DLNA/Smart TV',
+                                    'DLNA/Smart TV',
                                     style: GoogleFonts.outfit(
                                       fontSize: 12,
                                       color: Colors.white.withOpacity(0.5),
