@@ -23,7 +23,8 @@ class ApiClient {
 
   static String wrapUrl(String url) {
     if (kIsWeb) {
-      if (kReleaseMode) {
+      final hostname = Uri.base.host.toLowerCase();
+      if (!hostname.contains('localhost') && !hostname.contains('127.0.0.1')) {
         if (url.startsWith('https://vimeus.com/api/')) {
           return url.replaceFirst('https://vimeus.com/api/', '/vimeus-api/');
         } else if (url.startsWith('https://vimeus.com/e/')) {
@@ -35,8 +36,9 @@ class ApiClient {
         } else if (url.startsWith('https://appnew2.bixplay.online/api/')) {
           return url.replaceFirst('https://appnew2.bixplay.online/api/', '/bixplay-search/');
         }
+      } else {
+        return 'https://api.allorigins.win/raw?url=' + Uri.encodeComponent(url);
       }
-      return url;
     }
     return url;
   }
@@ -100,7 +102,8 @@ class ApiClient {
       final corsInterceptor = InterceptorsWrapper(
         onRequest: (options, handler) {
           final fullUrl = options.uri.toString();
-          if (kReleaseMode) {
+          final hostname = Uri.base.host.toLowerCase();
+          if (!hostname.contains('localhost') && !hostname.contains('127.0.0.1')) {
             // Rewrite URL paths using Netlify CDN redirects to bypass CORS
             if (fullUrl.startsWith(baseUrl)) {
               options.path = fullUrl.replaceFirst(baseUrl, '/bixplay-api/');
@@ -110,8 +113,10 @@ class ApiClient {
             options.baseUrl = '';
             options.queryParameters = {};
           } else {
-            // Local dev - relying on --disable-web-security flag
-            // No proxy needed
+            // Local dev - using AllOrigins open proxy to bypass CORS
+            options.path = 'https://api.allorigins.win/raw?url=' + Uri.encodeComponent(fullUrl);
+            options.baseUrl = '';
+            options.queryParameters = {};
           }
           return handler.next(options);
         },
@@ -188,7 +193,7 @@ class ApiClient {
       for (final item in rawList) {
         if (item is! Map) continue;
         final name = item['nombre']?.toString() ?? 'Canal';
-        final logo = item['logo']?.toString() ?? '';
+        final logo = wrapUrl(item['logo']?.toString() ?? '');
         final enlace = item['enlace']?.toString() ?? '';
         
         final servidoresRaw = item['servidores'];

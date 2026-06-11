@@ -20,6 +20,8 @@ import 'dart:ui';
 import '../api/api_client.dart';
 import 'details_screen.dart';
 import '../widgets/cast_device_dialog.dart';
+import '../services/web_helper_stub.dart'
+    if (dart.library.html) '../services/web_helper_web.dart' as web_helper;
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
   final bool isDirect;
@@ -89,6 +91,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   ChewieController? _chewieController;
   bool _isLoading = true;
   bool _showNeutralFallback = false;
+  bool _isIframePlayer = false;
+  String _iframeViewId = '';
   String _statusMessage = 'Inicializando...';
   bool _resolvedVideo = false;
   final List<String> _candidateQueue = [];
@@ -299,6 +303,17 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     );
   }
 
+  void _playIframeEmbed(String url) {
+    if (!mounted) return;
+    final viewId = 'iframe_player_${DateTime.now().millisecondsSinceEpoch}';
+    web_helper.registerIframe(viewId, url);
+    setState(() {
+      _isIframePlayer = true;
+      _iframeViewId = viewId;
+      _isLoading = false;
+    });
+  }
+
   void _extractAndPlay() {
     _fallbackTimerToken++;
     setState(() {
@@ -322,7 +337,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         if (switched) return;
       }
       if (kIsWeb) {
-        _tryNextServer(reason: 'Webviews no soportadas en Web');
+        _playIframeEmbed(_activeVideoUrl);
       } else if (!kIsWeb && Platform.isWindows) {
         // Skip Windows webview (too slow/unstable), use Flutter webview instead
         _extractWithFlutterWebview();
@@ -664,6 +679,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           : 'Reintentando extraccion en ${_activeServerName.toUpperCase()}...';
       _showNeutralFallback = false;
       _resolvedVideo = false;
+      _isIframePlayer = false;
+      _iframeViewId = '';
       _candidateQueue.clear();
       _triedCandidates.clear();
       _countdownTimer?.cancel();
@@ -843,6 +860,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _chewieController = null;
 
     _resolvedVideo = false;
+    _isIframePlayer = false;
+    _iframeViewId = '';
     _candidateQueue.clear();
     _triedCandidates.clear();
     _showNeutralFallback = false;
@@ -1593,7 +1612,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                               ),
                           ],
                         ))
-                  : Chewie(controller: _chewieController!),
+                  : (_isIframePlayer
+                      ? HtmlElementView(viewType: _iframeViewId)
+                      : Chewie(controller: _chewieController!)),
             ),
             _buildNextEpisodeCountdownCard(isTV),
             _buildRecommendationsScreen(isTV),
