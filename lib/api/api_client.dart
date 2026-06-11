@@ -166,7 +166,7 @@ class ApiClient {
     final dio = Dio();
     if (kIsWeb) {
       final hostname = Uri.base.host.toLowerCase();
-      if (hostname.contains('netlify.app') || hostname.contains('vercel.app')) {
+      if (!hostname.contains('localhost') && !hostname.contains('127.0.0.1')) {
         final wrapped = wrapUrl(url);
         final response = await dio.get(wrapped);
         return response.data;
