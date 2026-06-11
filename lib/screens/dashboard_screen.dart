@@ -33,6 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   List<dynamic> _continueWatching = [];
   List<dynamic> _recentMovies = [];
   List<dynamic> _recentSeries = [];
+  List<dynamic> _liveChannels = [];
   List<dynamic> _top10Mixed = [];
   List<dynamic> _dramaSeries = [];
   List<dynamic> _animePicks = [];
@@ -186,9 +187,17 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       final series = await _apiClient.getTvSeries(page: 1);
       final continueWatching = await WatchHistoryService.getContinueWatching(limit: 12);
 
+      List<dynamic> liveChannels = [];
+      try {
+        liveChannels = await _apiClient.getLiveTv();
+      } catch (e) {
+        debugPrint('DASHBOARD LIVE TV LOAD ERROR: $e');
+      }
+
       _recentMovies = movies.take(12).toList();
       _recentSeries = series.take(12).toList();
       _continueWatching = continueWatching;
+      _liveChannels = liveChannels.take(12).toList();
 
       _buildThematicRows(_recentMovies, _recentSeries);
       _isLoading = false;
@@ -205,6 +214,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       await captureAndLogError(source: 'dashboard.loadData', error: e, stackTrace: st);
       _recentMovies = [];
       _recentSeries = [];
+      _liveChannels = [];
       _continueWatching = [];
       _buildThematicRows(_recentMovies, _recentSeries);
       _isLoading = false;
@@ -768,7 +778,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 sigmaY: isTV ? 4.0 : 10.0,
               ),
               child: Container(
-                color: isTV ? colorBg.withOpacity(0.92) : Colors.transparent,
+                color: isTV ? colorBg.withOpacity(0.35) : Colors.transparent,
               ),
             ),
           ),
@@ -871,6 +881,15 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     title: 'SERIES DESTACADAS',
                     items: _recentSeries,
                     type: 'tvseries',
+                    isTV: isTV,
+                  ),
+                  SizedBox(height: isTV ? 22 * tvScale : 48),
+
+                  // Horizontal Live TV Grid Carrete
+                  _buildHorizontalRow(
+                    title: 'CANALES EN VIVO',
+                    items: _liveChannels,
+                    type: 'live',
                     isTV: isTV,
                   ),
                   const SizedBox(height: 48),
