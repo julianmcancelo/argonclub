@@ -7,8 +7,8 @@ void main() async {
   ));
 
   try {
-    print('Testing live_tv_channel_category...');
-    final res = await dio.get('live_tv_channel_category');
+    print('Testing featured_tv_channel...');
+    final res = await dio.get('featured_tv_channel', queryParameters: {'page': 1});
     print(res.data.toString());
   } catch (e) {
     print('Error: ' + e.toString());

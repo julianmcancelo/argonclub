@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../services/error_logger.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
@@ -17,6 +18,8 @@ class ApiClient {
     return '7f14e9c61f345dc915781e02cde0e084';
   })();
   static const String tmdbImageBase = 'https://image.tmdb.org/t/p/';
+
+  static final Map<String, Map<String, dynamic>> _liveTvCache = {};
 
   static String wrapUrl(String url) {
     if (kIsWeb) {
@@ -154,20 +157,82 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> _getCorsRes(String url) async {
+    final dio = Dio();
+    if (kIsWeb) {
+      final hostname = Uri.base.host.toLowerCase();
+      if (hostname.contains('netlify.app') || hostname.contains('vercel.app')) {
+        final wrapped = wrapUrl(url);
+        final response = await dio.get(wrapped);
+        return response.data;
+      } else {
+        final proxyUrl = 'https://api.allorigins.win/raw?url=' + Uri.encodeComponent(url);
+        final response = await dio.get(proxyUrl);
+        return response.data;
+      }
+    } else {
+      final response = await dio.get(url);
+      return response.data;
+    }
+  }
+
   // Live TV
   Future<List<dynamic>> getLiveTv() async {
     try {
-      final response = await _dio.get('all_tv_channel_by_category'); 
-      return response.data is List ? response.data : [response.data];
-    } catch (e) {
-      // Falback to another endpoint if the exact one is different
-      try {
-        final res2 = await _dio.get('tv_channels');
-        return res2.data is List ? res2.data : [res2.data];
-      } catch (e2) {
-        await captureAndLogError(source: 'api.getLiveTv.fallback', error: e2);
-        throw Exception('Failed to load live tv: $e');
+      final data = await _getCorsRes('https://server.bixplay.online/servidor_nuevo/tv/datos.php');
+      final List<dynamic> rawList = data is String ? jsonDecode(data) : data;
+      final List<dynamic> formattedList = [];
+      
+      _liveTvCache.clear();
+      
+      for (final item in rawList) {
+        if (item is! Map) continue;
+        final name = item['nombre']?.toString() ?? 'Canal';
+        final logo = item['logo']?.toString() ?? '';
+        final enlace = item['enlace']?.toString() ?? '';
+        
+        final servidoresRaw = item['servidores'];
+        final List<Map<String, dynamic>> servidores = [];
+        if (servidoresRaw is List) {
+          for (final s in servidoresRaw) {
+            if (s is Map) {
+              servidores.add({
+                'file_url': s['url_procesada']?.toString() ?? s['url_original']?.toString() ?? '',
+                'stream_url': s['url_procesada']?.toString() ?? s['url_original']?.toString() ?? '',
+                'label': s['fuente']?.toString() ?? 'Servidor',
+                'type': s['tipo']?.toString() ?? 'embed',
+                'videoType': s['tipo']?.toString() ?? 'embed',
+              });
+            }
+          }
+        }
+        
+        final defaultStreamUrl = servidores.isNotEmpty ? servidores[0]['stream_url'] : enlace;
+        final defaultVideoType = servidores.isNotEmpty ? servidores[0]['videoType'] : 'embed';
+        
+        final mappedChannel = {
+          'videos_id': name,
+          'live_tv_id': name,
+          'title': name,
+          'channel_name': name,
+          'tv_name': name,
+          'logo': logo,
+          'thumbnail_url': logo,
+          'poster_url': logo,
+          'stream_url': defaultStreamUrl,
+          'videoType': defaultVideoType,
+          'videos': servidores,
+          'description': 'Canal de televisión en vivo.',
+        };
+        
+        _liveTvCache[name] = mappedChannel;
+        formattedList.add(mappedChannel);
       }
+      
+      return formattedList;
+    } catch (e) {
+      await captureAndLogError(source: 'api.getLiveTv', error: e);
+      return [];
     }
   }
 
@@ -306,6 +371,10 @@ class ApiClient {
 
   // Get Single Details (Movies/Series/Live TV)
   Future<Map<String, dynamic>> getSingleDetails(String type, String id) async {
+    if ((type == 'live' || type == 'tv') && _liveTvCache.containsKey(id)) {
+      return _liveTvCache[id]!;
+    }
+
     String apiType = type;
     if (type == 'movies') apiType = 'movie';
     if (type == 'live') apiType = 'tv';
