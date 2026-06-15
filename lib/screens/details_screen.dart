@@ -2433,6 +2433,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                           width: isTV ? 140 : 90, 
                           height: isTV ? 80 : 54, 
                           fit: BoxFit.cover, 
+                          memCacheWidth: ((isTV ? 140 : 90) * MediaQuery.of(context).devicePixelRatio).round(),
+                          memCacheHeight: ((isTV ? 80 : 54) * MediaQuery.of(context).devicePixelRatio).round(),
                           errorWidget: (c, u, e) => const Icon(Icons.error)
                         )
                       : Container(

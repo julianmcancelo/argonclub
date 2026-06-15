@@ -1130,6 +1130,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (event is! KeyDownEvent || _isLoading) return KeyEventResult.ignored;
 
     final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.arrowUp) {
+      _showServerSelectionDialog();
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.arrowRight) {
       _seekBySeconds(10);
       return KeyEventResult.handled;
@@ -1625,7 +1629,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!_isLoading)
+                    if (!_isLoading) ...[
+                      IconButton(
+                        icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 28),
+                        onPressed: _showServerSelectionDialog,
+                        tooltip: 'Servidores / Calidad',
+                      ),
+                      const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Icons.cast_rounded, color: Colors.white, size: 28),
                         onPressed: () {
@@ -1640,7 +1650,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                           );
                         },
                       ),
-                    const SizedBox(width: 8),
+                    ],
                     _buildWatchPartyChip(isTV),
                   ],
                 ),
@@ -1957,6 +1967,151 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _selectServer(int index) {
+    if (!mounted) return;
+    _fallbackTimerToken++;
+    setState(() {
+      _setActiveServer(index);
+      _statusMessage = 'Cambiando a ${_activeServerName.toUpperCase()}...';
+      _showNeutralFallback = false;
+      _resolvedVideo = false;
+      _isIframePlayer = false;
+      _iframeViewId = '';
+      _candidateQueue.clear();
+      _triedCandidates.clear();
+      _countdownTimer?.cancel();
+      _chewieController?.dispose();
+      _chewieController = null;
+      _videoPlayerController?.removeListener(_videoListener);
+      _videoPlayerController?.dispose();
+      _videoPlayerController = null;
+      _isLoading = true;
+    });
+    _startPlaybackForActiveServer();
+  }
+
+  Future<void> _showServerSelectionDialog() async {
+    final isTV = MediaQuery.of(context).size.width > 960;
+    final wasPlaying = _videoPlayerController?.value.isPlaying ?? false;
+    if (wasPlaying) {
+      try {
+        await _videoPlayerController?.pause();
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF111118),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.tune_rounded, color: colorBrandA),
+              const SizedBox(width: 10),
+              const Text('Seleccionar Servidor / Calidad', style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          content: SizedBox(
+            width: isTV ? 460 : 340,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _serverQueue.length,
+              itemBuilder: (context, index) {
+                final server = _serverQueue[index];
+                final name = server['name']?.toString() ?? 'SERVIDOR ${index + 1}';
+                final isActive = index == _activeServerIndex;
+                
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Focus(
+                    autofocus: isActive,
+                    onKeyEvent: (node, event) {
+                      if (event is KeyDownEvent &&
+                          (event.logicalKey == LogicalKeyboardKey.enter ||
+                           event.logicalKey == LogicalKeyboardKey.select)) {
+                        Navigator.pop(context);
+                        _selectServer(index);
+                        return KeyEventResult.handled;
+                      }
+                      return KeyEventResult.ignored;
+                    },
+                    child: Builder(
+                      builder: (context) {
+                        final isFocused = Focus.of(context).hasFocus;
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _selectServer(index);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isTV ? 18 : 12, 
+                              vertical: isTV ? 14 : 10
+                            ),
+                            decoration: BoxDecoration(
+                              color: isFocused
+                                  ? colorBrandA.withOpacity(0.15)
+                                  : (isActive ? Colors.white.withOpacity(0.06) : Colors.transparent),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isFocused
+                                    ? colorBrandA
+                                    : (isActive ? Colors.white24 : Colors.transparent),
+                                width: 2.0,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isActive ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                                  color: isActive ? colorBrandA : Colors.white54,
+                                  size: isTV ? 24 : 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    name.toUpperCase(),
+                                    style: TextStyle(
+                                      color: isActive ? Colors.white : Colors.white70,
+                                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                      fontSize: isTV ? 16 : 14,
+                                    ),
+                                  ),
+                                ),
+                                if (isActive)
+                                  Icon(Icons.check_circle_outline_rounded, color: colorBrandA, size: isTV ? 22 : 18),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                if (wasPlaying) {
+                  _videoPlayerController?.play();
+                }
+              },
+              child: const Text('Cancelar', style: TextStyle(color: Colors.white70)),
+            ),
+          ],
+        );
+      },
     );
   }
 

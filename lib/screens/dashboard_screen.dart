@@ -1678,6 +1678,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         child: CachedNetworkImage(
                           imageUrl: posterUrl,
                           fit: BoxFit.cover,
+                          memCacheWidth: ((isTV ? 140 * tvScale : 90) * MediaQuery.of(context).devicePixelRatio).round(),
+                          memCacheHeight: ((isTV ? 210 * tvScale : 135) * MediaQuery.of(context).devicePixelRatio).round(),
                           errorWidget: (context, url, error) => Container(
                             color: colorBg2,
                             child: const Icon(Icons.movie, color: colorInk3),
@@ -2316,6 +2318,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           CachedNetworkImage(
                             imageUrl: imageUrl,
                             fit: BoxFit.cover,
+                            memCacheWidth: (cardWidth * MediaQuery.of(context).devicePixelRatio).round(),
+                            memCacheHeight: (cardHeight * MediaQuery.of(context).devicePixelRatio).round(),
                             errorWidget: (c, u, e) => Container(
                               color: colorBg2,
                               child: const Icon(Icons.movie, color: colorInk3),
@@ -2544,6 +2548,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               ? CachedNetworkImage(
                                   imageUrl: imageUrl,
                                   fit: BoxFit.cover,
+                                  memCacheWidth: (width * MediaQuery.of(context).devicePixelRatio).round(),
+                                  memCacheHeight: (height * MediaQuery.of(context).devicePixelRatio).round(),
                                   errorWidget: (c, u, e) => Container(
                                     color: colorBg2,
                                     child: const Icon(Icons.movie, color: colorInk3),
