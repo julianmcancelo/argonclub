@@ -1935,6 +1935,8 @@ class _DashboardScreenState extends State<DashboardScreen>
     final movieCount = _recentMovies.length;
     final seriesCount = _recentSeries.length;
     final animeCount = _animePicks.length;
+    final liveCount = _liveChannels.length;
+    final myListCount = _myListItems.length;
     final tvScale = _tvScale(context);
 
     final categories = [
@@ -1944,7 +1946,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         'subtitle': '$movieCount disponibles',
         'accent': accentPeliculas,
         'onTap': () => _navigateToPage(
-          const HomeScreen(apiEndpoint: 'movies', title: 'Peliculas'),
+          const HomeScreen(apiEndpoint: 'movies', title: 'Películas'),
         ),
       },
       {
@@ -1954,6 +1956,15 @@ class _DashboardScreenState extends State<DashboardScreen>
         'accent': accentSeries,
         'onTap': () => _navigateToPage(
           const HomeScreen(apiEndpoint: 'tvseries', title: 'Series'),
+        ),
+      },
+      {
+        'title': 'TV en Vivo',
+        'icon': Icons.live_tv_rounded,
+        'subtitle': '$liveCount canales',
+        'accent': accentTV,
+        'onTap': () => _navigateToPage(
+          const HomeScreen(apiEndpoint: 'live', title: 'TV en Vivo'),
         ),
       },
       {
@@ -1972,13 +1983,51 @@ class _DashboardScreenState extends State<DashboardScreen>
       {
         'title': 'Telenovelas',
         'icon': Icons.favorite_border_rounded,
-        'subtitle': 'coleccion',
+        'subtitle': 'Colección',
         'accent': accentTelenovelas,
         'onTap': () => _navigateToPage(
           const HomeScreen(
             apiEndpoint: 'tvseries',
             title: 'Telenovelas',
             initialCategory: SeriesCategory.novelas,
+          ),
+        ),
+      },
+      {
+        'title': 'Clásicos Retro',
+        'icon': Icons.history_toggle_off_rounded,
+        'subtitle': 'Series retro',
+        'accent': currentAccentColor,
+        'onTap': () => _navigateToPage(
+          const HomeScreen(
+            apiEndpoint: 'tvseries',
+            title: 'Clásicos Retro',
+            initialCategory: SeriesCategory.retro,
+          ),
+        ),
+      },
+      {
+        'title': 'Documentales',
+        'icon': Icons.public_rounded,
+        'subtitle': 'Ciencia y cultura',
+        'accent': currentAccentColor,
+        'onTap': () => _navigateToPage(
+          const HomeScreen(
+            apiEndpoint: 'tvseries',
+            title: 'Documentales',
+            initialCategory: SeriesCategory.docus,
+          ),
+        ),
+      },
+      {
+        'title': 'Mi Lista',
+        'icon': Icons.bookmark_outline_rounded,
+        'subtitle': '$myListCount guardados',
+        'accent': currentAccentColor,
+        'onTap': () => _navigateToPage(
+          const HomeScreen(
+            apiEndpoint: 'mylist',
+            title: 'Mi Lista',
           ),
         ),
       },

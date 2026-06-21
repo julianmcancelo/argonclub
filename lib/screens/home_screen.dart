@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_client.dart';
 import '../theme/argon_theme.dart';
+import '../services/my_list_service.dart';
 import 'details_screen.dart';
 import 'search_screen.dart';
 
@@ -139,6 +140,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         data = await _apiClient.getTvSeries(page: _page);
       } else if (widget.apiEndpoint == 'live') {
         data = await _apiClient.getLiveTv();
+        _hasMore = false;
+      } else if (widget.apiEndpoint == 'mylist') {
+        final prefs = await SharedPreferences.getInstance();
+        final profileId = prefs.getString('argon_active_profile_id') ?? 'default';
+        data = await MyListService.getItems(profileId);
         _hasMore = false;
       } else {
         data = [];
@@ -435,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           final item = _filteredItems[index];
                           final imageUrl = item['poster_url'] ?? item['thumbnail_url'] ?? item['logo'] ?? '';
                           final name = item['title'] ?? item['tv_name'] ?? item['channel_name'] ?? '';
-                          final itemId = item['movies_id']?.toString() ?? item['videos_id']?.toString() ?? item['live_tv_id']?.toString() ?? '';
+                          final itemId = item['media_id']?.toString() ?? item['movies_id']?.toString() ?? item['videos_id']?.toString() ?? item['live_tv_id']?.toString() ?? '';
 
                           return _FocusableCard(
                             isTV: isTV,
@@ -456,12 +462,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 MaterialPageRoute(
                                   builder: (context) => DetailsScreen(
                                     itemData: item,
-                                    type: widget.apiEndpoint,
+                                    type: widget.apiEndpoint == 'mylist' ? (item['media_type'] ?? 'movies').toString() : widget.apiEndpoint,
                                     id: itemId,
                                   ),
                                 ),
                               ).then((_) {
                                 _loadTweakPreferences();
+                                if (widget.apiEndpoint == 'mylist') {
+                                  _fetchItems();
+                                }
                               });
                             },
                           );
