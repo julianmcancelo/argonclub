@@ -33,7 +33,7 @@ class WatchPartyEvent {
 
 class WatchPartyService {
   static const String _envEndpoint = String.fromEnvironment('WATCH_PARTY_WS_URL');
-  static const String _productionEndpoint = 'wss://argonapp.onrender.com';
+  static const String _productionEndpoint = 'wss://api.argonapp.lat';
   static const String _emulatorEndpoint = 'ws://10.0.2.2:3000';
   // Default backend endpoint - prefer deployed Render backend
   static final String defaultEndpoint =
