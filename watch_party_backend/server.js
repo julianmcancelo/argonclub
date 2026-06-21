@@ -72,7 +72,7 @@ class Room {
 }
 
 const rooms = new Map(); // roomId -> Room
-const pairingSessions = new Map(); // pairingCode -> { tvSocket, phoneSocket }
+const pairingSessions = new Map(); // pairingCode -> { tvSocket, phoneSocket, phoneDevice }
 
 // Cleanup invalid rooms
 setInterval(() => {
@@ -125,6 +125,13 @@ wss.on('connection', (socket) => {
       if (!type) return;
 
       if (type === 'register_tv') {
+        if (socket.pairingCode) {
+          const previousSession = pairingSessions.get(socket.pairingCode);
+          if (previousSession?.phoneSocket?.readyState === WebSocket.OPEN) {
+            previousSession.phoneSocket.send(JSON.stringify({ type: 'tv_disconnected' }));
+          }
+          pairingSessions.delete(socket.pairingCode);
+        }
         let code;
         do {
           code = Math.floor(1000 + Math.random() * 9000).toString();
@@ -146,16 +153,33 @@ wss.on('connection', (socket) => {
         const targetCode = (payload?.code || '').toString().trim();
         const session = pairingSessions.get(targetCode);
         if (session) {
+          const rawDevice = payload?.device || {};
+          const phoneDevice = {
+            name: (rawDevice.name || 'Argon Remote').toString().trim().substring(0, 40),
+            platform: (rawDevice.platform || 'Móvil').toString().trim().substring(0, 24),
+          };
+          if (session.phoneSocket &&
+              session.phoneSocket !== socket &&
+              session.phoneSocket.readyState === WebSocket.OPEN) {
+            session.phoneSocket.send(JSON.stringify({
+              type: 'phone_disconnected',
+              payload: { message: 'Otro teléfono tomó el control' },
+            }));
+            session.phoneSocket.close(1000, 'Replaced by another remote');
+          }
           session.phoneSocket = socket;
+          session.phoneDevice = phoneDevice;
           socket.pairingCode = targetCode;
           socket.isPhone = true;
 
           session.tvSocket.send(JSON.stringify({
             type: 'phone_paired',
+            payload: { device: phoneDevice },
           }));
 
           socket.send(JSON.stringify({
             type: 'paired_to_tv',
+            payload: { device: { name: 'Argon TV', platform: 'Web/Vidaa' } },
           }));
           console.log(`[PAIRING] Phone paired to TV code: ${targetCode}`);
         } else {
@@ -170,7 +194,10 @@ wss.on('connection', (socket) => {
       if (type === 'remote_key') {
         if (socket.pairingCode && socket.isPhone) {
           const session = pairingSessions.get(socket.pairingCode);
-          if (session && session.tvSocket && session.tvSocket.readyState === WebSocket.OPEN) {
+          if (session &&
+              session.phoneSocket === socket &&
+              session.tvSocket &&
+              session.tvSocket.readyState === WebSocket.OPEN) {
             session.tvSocket.send(JSON.stringify({
               type: 'remote_key',
               payload: { key: payload.key },
@@ -183,13 +210,24 @@ wss.on('connection', (socket) => {
       if (type === 'remote_search') {
         if (socket.pairingCode && socket.isPhone) {
           const session = pairingSessions.get(socket.pairingCode);
-          if (session && session.tvSocket && session.tvSocket.readyState === WebSocket.OPEN) {
+          if (session &&
+              session.phoneSocket === socket &&
+              session.tvSocket &&
+              session.tvSocket.readyState === WebSocket.OPEN) {
             session.tvSocket.send(JSON.stringify({
               type: 'remote_search',
               payload: { query: payload.query },
             }));
           }
         }
+        return;
+      }
+
+      if (type === 'ping' && socket.pairingCode) {
+        socket.send(JSON.stringify({
+          type: 'pong',
+          payload: { timestamp: Date.now(), serverTime: Date.now() },
+        }));
         return;
       }
 
@@ -399,10 +437,13 @@ wss.on('connection', (socket) => {
           pairingSessions.delete(socket.pairingCode);
           console.log(`[PAIRING] TV disconnected, deleted session code: ${socket.pairingCode}`);
         } else if (socket.isPhone) {
-          if (session.tvSocket && session.tvSocket.readyState === WebSocket.OPEN) {
-            session.tvSocket.send(JSON.stringify({ type: 'phone_disconnected' }));
+          if (session.phoneSocket === socket) {
+            if (session.tvSocket && session.tvSocket.readyState === WebSocket.OPEN) {
+              session.tvSocket.send(JSON.stringify({ type: 'phone_disconnected' }));
+            }
+            session.phoneSocket = null;
+            session.phoneDevice = null;
           }
-          session.phoneSocket = null;
           console.log(`[PAIRING] Phone disconnected from session code: ${socket.pairingCode}`);
         }
       }
@@ -462,7 +503,7 @@ server.on('close', () => {
 
 // Start server
 server.listen(PORT, () => {
-  console.log(`Watch Party Backend running on port ${PORT}`);
+  console.log(`Argon realtime backend running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`Stats: http://localhost:${PORT}/stats`);
 });

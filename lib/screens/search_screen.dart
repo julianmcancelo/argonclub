@@ -6,7 +6,9 @@ import '../api/api_client.dart';
 import 'details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({Key? key}) : super(key: key);
+  final String? remoteQuery;
+
+  const SearchScreen({Key? key, this.remoteQuery}) : super(key: key);
 
   @override
   _SearchScreenState createState() => _SearchScreenState();
@@ -17,7 +19,9 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _searchFocusNode = FocusNode(debugLabel: 'search-input');
-  final FocusNode _resultsBridgeFocusNode = FocusNode(debugLabel: 'search-results-bridge');
+  final FocusNode _resultsBridgeFocusNode = FocusNode(
+    debugLabel: 'search-results-bridge',
+  );
   late final List<FocusNode> _filterFocusNodes;
 
   List<dynamic> _items = [];
@@ -33,8 +37,29 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    _filterFocusNodes = List.generate(7, (index) => FocusNode(debugLabel: 'search-filter-$index'));
+    _filterFocusNodes = List.generate(
+      7,
+      (index) => FocusNode(debugLabel: 'search-filter-$index'),
+    );
     _scrollController.addListener(_onScroll);
+    _applyRemoteQuery(widget.remoteQuery);
+  }
+
+  @override
+  void didUpdateWidget(covariant SearchScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.remoteQuery != oldWidget.remoteQuery) {
+      _applyRemoteQuery(widget.remoteQuery);
+    }
+  }
+
+  void _applyRemoteQuery(String? query) {
+    final normalizedQuery = query?.trim() ?? '';
+    if (normalizedQuery.isEmpty || normalizedQuery == _currentQuery) return;
+    _searchController.text = normalizedQuery;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _performSearch(normalizedQuery);
+    });
   }
 
   @override
@@ -55,7 +80,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
         _hasMore) {
       _fetchMoreItems();
@@ -88,7 +114,9 @@ class _SearchScreenState extends State<SearchScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -117,9 +145,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   List<dynamic> _applyFilters(List<dynamic> input) {
-    bool isTv(dynamic item) => item['is_tvseries'] == '1' || item['tv_name'] != null;
+    bool isTv(dynamic item) =>
+        item['is_tvseries'] == '1' || item['tv_name'] != null;
     bool isLive(dynamic item) =>
-        item['stream_url'] != null || item['channel_name'] != null || item['live_tv_id'] != null;
+        item['stream_url'] != null ||
+        item['channel_name'] != null ||
+        item['live_tv_id'] != null;
     bool isMovie(dynamic item) => !isTv(item) && !isLive(item);
 
     bool matchesType(dynamic item) {
@@ -137,15 +168,25 @@ class _SearchScreenState extends State<SearchScreen> {
 
     bool matchesFranchise(dynamic item) {
       if (_franchiseFilter == 'all') return true;
-      final blob = [item['title'], item['tv_name'], item['description'], item['genre']].join(' ').toLowerCase();
-      if (_franchiseFilter == 'marvel') return blob.contains('marvel') || blob.contains('avengers');
+      final blob = [
+        item['title'],
+        item['tv_name'],
+        item['description'],
+        item['genre'],
+      ].join(' ').toLowerCase();
+      if (_franchiseFilter == 'marvel')
+        return blob.contains('marvel') || blob.contains('avengers');
       if (_franchiseFilter == 'dc') {
-        return blob.contains(' dc ') || blob.contains('batman') || blob.contains('superman');
+        return blob.contains(' dc ') ||
+            blob.contains('batman') ||
+            blob.contains('superman');
       }
       return true;
     }
 
-    return input.where((item) => matchesType(item) && matchesFranchise(item)).toList();
+    return input
+        .where((item) => matchesType(item) && matchesFranchise(item))
+        .toList();
   }
 
   @override
@@ -182,7 +223,8 @@ class _SearchScreenState extends State<SearchScreen> {
             return KeyEventResult.ignored;
           }
 
-          if (event.logicalKey == LogicalKeyboardKey.arrowDown && _searchFocusNode.hasFocus) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown &&
+              _searchFocusNode.hasFocus) {
             _moveFromSearchToResults();
             return KeyEventResult.handled;
           }
@@ -199,11 +241,21 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     if (_items.isEmpty && _currentQuery.isNotEmpty) {
-      return const Center(child: Text('No se encontraron resultados.', style: TextStyle(color: Colors.white)));
+      return const Center(
+        child: Text(
+          'No se encontraron resultados.',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
     }
 
     if (_items.isEmpty) {
-      return const Center(child: Text('Escribe algo para buscar...', style: TextStyle(color: Colors.white54)));
+      return const Center(
+        child: Text(
+          'Escribe algo para buscar...',
+          style: TextStyle(color: Colors.white54),
+        ),
+      );
     }
 
     return Column(
@@ -229,13 +281,23 @@ class _SearchScreenState extends State<SearchScreen> {
                 _typeFilter = 'live';
               }, focusNode: _filterFocusNodes[3]),
               const SizedBox(width: 14),
-              _chip('Franquicia: Todas', _franchiseFilter == 'all', () {
-                _franchiseFilter = 'all';
-              }, focusNode: _filterFocusNodes[4]),
+              _chip(
+                'Franquicia: Todas',
+                _franchiseFilter == 'all',
+                () {
+                  _franchiseFilter = 'all';
+                },
+                focusNode: _filterFocusNodes[4],
+              ),
               const SizedBox(width: 8),
-              _chip('Marvel', _franchiseFilter == 'marvel', () {
-                _franchiseFilter = 'marvel';
-              }, focusNode: _filterFocusNodes[5]),
+              _chip(
+                'Marvel',
+                _franchiseFilter == 'marvel',
+                () {
+                  _franchiseFilter = 'marvel';
+                },
+                focusNode: _filterFocusNodes[5],
+              ),
               const SizedBox(width: 8),
               _chip('DC', _franchiseFilter == 'dc', () {
                 _franchiseFilter = 'dc';
@@ -258,10 +320,19 @@ class _SearchScreenState extends State<SearchScreen> {
             itemCount: _items.length,
             itemBuilder: (context, index) {
               final item = _items[index];
-              final imageUrl = item['poster_url'] ?? item['thumbnail_url'] ?? '';
-              final name = item['title'] ?? item['tv_name'] ?? item['channel_name'] ?? '';
-              final isTv = item['is_tvseries'] == '1' || item['tv_name'] != null;
-              final isLive = item['stream_url'] != null || item['channel_name'] != null || item['live_tv_id'] != null;
+              final imageUrl =
+                  item['poster_url'] ?? item['thumbnail_url'] ?? '';
+              final name =
+                  item['title'] ??
+                  item['tv_name'] ??
+                  item['channel_name'] ??
+                  '';
+              final isTv =
+                  item['is_tvseries'] == '1' || item['tv_name'] != null;
+              final isLive =
+                  item['stream_url'] != null ||
+                  item['channel_name'] != null ||
+                  item['live_tv_id'] != null;
               final type = isLive ? 'live' : (isTv ? 'tvseries' : 'movies');
 
               return _FocusableSearchCard(
@@ -277,7 +348,10 @@ class _SearchScreenState extends State<SearchScreen> {
                       builder: (context) => DetailsScreen(
                         itemData: item,
                         type: type,
-                        id: item['movies_id']?.toString() ?? item['videos_id']?.toString() ?? '',
+                        id:
+                            item['movies_id']?.toString() ??
+                            item['videos_id']?.toString() ??
+                            '',
                       ),
                     ),
                   );
@@ -311,7 +385,12 @@ class _SearchScreenState extends State<SearchScreen> {
     _searchFocusNode.focusInDirection(TraversalDirection.down);
   }
 
-  Widget _chip(String label, bool selected, VoidCallback setter, {FocusNode? focusNode}) {
+  Widget _chip(
+    String label,
+    bool selected,
+    VoidCallback setter, {
+    FocusNode? focusNode,
+  }) {
     return ChoiceChip(
       focusNode: focusNode,
       label: Text(label),
@@ -357,7 +436,8 @@ class _FocusableSearchCardState extends State<_FocusableSearchCard> {
       autofocus: widget.autofocus,
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent &&
-            (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.select)) {
+            (event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.select)) {
           widget.onTap();
           return KeyEventResult.handled;
         }
@@ -386,55 +466,65 @@ class _FocusableSearchCardState extends State<_FocusableSearchCard> {
           child: RepaintBoundary(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 120),
-              transform: _focused ? (Matrix4.identity()..scale(1.03)) : Matrix4.identity(),
+              transform: _focused
+                  ? (Matrix4.identity()..scale(1.03))
+                  : Matrix4.identity(),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                border: _focused ? Border.all(color: Colors.red, width: 3) : null,
+                border: _focused
+                    ? Border.all(color: Colors.red, width: 3)
+                    : null,
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                  CachedNetworkImage(
-                    imageUrl: widget.imageUrl,
-                    fit: BoxFit.cover,
-                    fadeInDuration: Duration.zero,
-                    filterQuality: FilterQuality.medium,
-                    memCacheWidth: widget.isTV ? 420 : 240,
-                    memCacheHeight: widget.isTV ? 1080 : 720,
-                    placeholder: (context, url) => Container(color: Colors.grey[900]),
-                    errorWidget: (context, url, error) =>
-                        Container(color: Colors.grey[800], child: const Icon(Icons.movie, color: Colors.white54)),
-                  ),
-                    Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.0),
-                            Colors.black.withOpacity(_focused ? 0.86 : 0.74),
-                          ],
-                        ),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: widget.isTV ? 8 : 4, horizontal: 4),
-                      child: Text(
-                        widget.name,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: widget.isTV ? 13 : 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: widget.isTV ? 2 : 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
+                    CachedNetworkImage(
+                      imageUrl: widget.imageUrl,
+                      fit: BoxFit.cover,
+                      fadeInDuration: Duration.zero,
+                      filterQuality: FilterQuality.medium,
+                      memCacheWidth: widget.isTV ? 420 : 240,
+                      memCacheHeight: widget.isTV ? 1080 : 720,
+                      placeholder: (context, url) =>
+                          Container(color: Colors.grey[900]),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[800],
+                        child: const Icon(Icons.movie, color: Colors.white54),
                       ),
                     ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.0),
+                              Colors.black.withOpacity(_focused ? 0.86 : 0.74),
+                            ],
+                          ),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: widget.isTV ? 8 : 4,
+                          horizontal: 4,
+                        ),
+                        child: Text(
+                          widget.name,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: widget.isTV ? 13 : 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: widget.isTV ? 2 : 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     ),
                   ],
                 ),

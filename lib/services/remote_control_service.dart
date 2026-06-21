@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'watch_party_service.dart';
 
 class RemoteControlService {
-  static final RemoteControlService _instance = RemoteControlService._internal();
+  static final RemoteControlService _instance =
+      RemoteControlService._internal();
 
   factory RemoteControlService({String? endpoint}) {
     return _instance;
   }
 
   RemoteControlService._internal()
-      : endpoint = WatchPartyService.defaultEndpoint;
+    : endpoint = WatchPartyService.defaultEndpoint;
 
   final String endpoint;
   WebSocketChannel? _channel;
@@ -22,17 +22,30 @@ class RemoteControlService {
   bool _paired = false;
   Timer? _reconnectTimer;
 
-  final StreamController<String> _pairingCodeController = StreamController<String>.broadcast();
-  final StreamController<bool> _pairingStatusController = StreamController<bool>.broadcast();
-  final StreamController<String> _remoteSearchController = StreamController<String>.broadcast();
+  final StreamController<String> _pairingCodeController =
+      StreamController<String>.broadcast();
+  final StreamController<bool> _pairingStatusController =
+      StreamController<bool>.broadcast();
+  final StreamController<String> _remoteSearchController =
+      StreamController<String>.broadcast();
+  final StreamController<String> _remoteKeyController =
+      StreamController<String>.broadcast();
+  final StreamController<String> _pairedDeviceController =
+      StreamController<String>.broadcast();
+  String _pairedDeviceLabel = 'Argon Remote';
+  String? _lastRemoteKey;
 
   bool get isConnected => _connected;
   bool get isPaired => _paired;
   String? get pairingCode => _pairingCode;
+  String get pairedDeviceLabel => _pairedDeviceLabel;
+  String? get lastRemoteKey => _lastRemoteKey;
 
   Stream<String> get pairingCodeStream => _pairingCodeController.stream;
   Stream<bool> get pairingStatusStream => _pairingStatusController.stream;
   Stream<String> get remoteSearchStream => _remoteSearchController.stream;
+  Stream<String> get remoteKeyStream => _remoteKeyController.stream;
+  Stream<String> get pairedDeviceStream => _pairedDeviceController.stream;
 
   Future<void> connect() async {
     _reconnectTimer?.cancel();
@@ -40,38 +53,45 @@ class RemoteControlService {
 
     final candidates = <String>[
       endpoint,
-      ...WatchPartyService.fallbackEndpoints.where((value) => value != endpoint),
+      ...WatchPartyService.fallbackEndpoints.where(
+        (value) => value != endpoint,
+      ),
     ];
 
     Object? lastError;
     for (final candidate in candidates) {
       try {
         final uri = Uri.parse(candidate);
-        _channel = WebSocketChannel.connect(uri);
-        _connected = true;
+        final channel = WebSocketChannel.connect(uri);
+        _channel = channel;
 
-        _sub = _channel!.stream.listen(
+        _sub = channel.stream.listen(
           _onData,
           onError: (err) => _onClosed(),
           onDone: () => _onClosed(),
           cancelOnError: false,
         );
+        await channel.ready.timeout(const Duration(seconds: 12));
+        _connected = true;
         return;
       } catch (e) {
         lastError = e;
       }
     }
-    
+
     _scheduleReconnect();
-    throw lastError ?? StateError('No se pudo conectar al servidor de control remoto');
+    throw lastError ??
+        StateError('No se pudo conectar al servidor de control remoto');
   }
 
   void _scheduleReconnect() {
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(const Duration(seconds: 5), () {
-      connect().then((_) {
-        registerTv();
-      }).catchError((_) {});
+      connect()
+          .then((_) {
+            registerTv();
+          })
+          .catchError((_) {});
     });
   }
 
@@ -87,10 +107,7 @@ class RemoteControlService {
   // TV Side: Request pairing code
   void registerTv() {
     if (!_connected) return;
-    _sendRaw({
-      'type': 'register_tv',
-      'payload': {},
-    });
+    _sendRaw({'type': 'register_tv', 'payload': {}});
   }
 
   // Phone Side: Pair with TV code
@@ -142,86 +159,33 @@ class RemoteControlService {
         }
       } else if (type == 'phone_paired' || type == 'paired_to_tv') {
         _paired = true;
+        final rawDevice = payload['device'];
+        if (rawDevice is Map) {
+          final device = Map<String, dynamic>.from(rawDevice);
+          final name = device['name']?.toString().trim();
+          final platform = device['platform']?.toString().trim();
+          _pairedDeviceLabel = [
+            if (name != null && name.isNotEmpty) name,
+            if (platform != null && platform.isNotEmpty) platform,
+          ].join(' · ');
+          if (_pairedDeviceLabel.isEmpty) _pairedDeviceLabel = 'Argon Remote';
+        }
+        _pairedDeviceController.add(_pairedDeviceLabel);
         _pairingStatusController.add(true);
       } else if (type == 'tv_disconnected' || type == 'phone_disconnected') {
         _paired = false;
         _pairingStatusController.add(false);
       } else if (type == 'remote_key') {
         final key = payload['key']?.toString() ?? '';
-        _simulateKey(key);
+        if (key.isNotEmpty) {
+          _lastRemoteKey = key;
+          _remoteKeyController.add(key);
+        }
       } else if (type == 'remote_search') {
         final query = payload['query']?.toString() ?? '';
         _remoteSearchController.add(query);
       }
     } catch (_) {}
-  }
-
-  // Simulates keyboard presses based on TV remote D-Pad controls
-  void _simulateKey(String key) {
-    LogicalKeyboardKey? logicalKey;
-    PhysicalKeyboardKey? physicalKey;
-    switch (key) {
-      case 'ArrowUp':
-        logicalKey = LogicalKeyboardKey.arrowUp;
-        physicalKey = PhysicalKeyboardKey.arrowUp;
-        break;
-      case 'ArrowDown':
-        logicalKey = LogicalKeyboardKey.arrowDown;
-        physicalKey = PhysicalKeyboardKey.arrowDown;
-        break;
-      case 'ArrowLeft':
-        logicalKey = LogicalKeyboardKey.arrowLeft;
-        physicalKey = PhysicalKeyboardKey.arrowLeft;
-        break;
-      case 'ArrowRight':
-        logicalKey = LogicalKeyboardKey.arrowRight;
-        physicalKey = PhysicalKeyboardKey.arrowRight;
-        break;
-      case 'Enter':
-        logicalKey = LogicalKeyboardKey.enter;
-        physicalKey = PhysicalKeyboardKey.enter;
-        break;
-      case 'Backspace':
-        logicalKey = LogicalKeyboardKey.backspace;
-        physicalKey = PhysicalKeyboardKey.backspace;
-        break;
-      case 'Escape':
-        logicalKey = LogicalKeyboardKey.escape;
-        physicalKey = PhysicalKeyboardKey.escape;
-        break;
-      case 'MediaPlayPause':
-        logicalKey = LogicalKeyboardKey.mediaPlayPause;
-        physicalKey = PhysicalKeyboardKey.mediaPlayPause;
-        break;
-      case 'MediaRewind':
-        logicalKey = LogicalKeyboardKey.mediaRewind;
-        physicalKey = PhysicalKeyboardKey.mediaRewind;
-        break;
-      case 'MediaFastForward':
-        logicalKey = LogicalKeyboardKey.mediaFastForward;
-        physicalKey = PhysicalKeyboardKey.mediaFastForward;
-        break;
-    }
-
-    if (logicalKey != null && physicalKey != null) {
-      try {
-        final timeMs = DateTime.now().millisecondsSinceEpoch;
-        HardwareKeyboard.instance.handleKeyEvent(
-          KeyDownEvent(
-            physicalKey: physicalKey,
-            logicalKey: logicalKey,
-            timeStamp: Duration(milliseconds: timeMs),
-          ),
-        );
-        HardwareKeyboard.instance.handleKeyEvent(
-          KeyUpEvent(
-            physicalKey: physicalKey,
-            logicalKey: logicalKey,
-            timeStamp: Duration(milliseconds: timeMs + 20),
-          ),
-        );
-      } catch (_) {}
-    }
   }
 
   // Clean disconnect, keeps the controllers alive since it is a Singleton

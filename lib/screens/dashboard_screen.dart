@@ -19,6 +19,7 @@ import '../services/error_logger.dart';
 import '../services/watch_history.dart';
 import '../services/my_list_service.dart';
 import '../services/watch_party_service.dart';
+import '../widgets/remote_control_status_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -27,7 +28,8 @@ class DashboardScreen extends StatefulWidget {
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with TickerProviderStateMixin {
   final ApiClient _apiClient = ApiClient();
   bool _isLoading = true;
   List<dynamic> _continueWatching = [];
@@ -39,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   List<dynamic> _animePicks = [];
   List<dynamic> _classicsPicks = [];
   List<dynamic> _myListItems = [];
-  
+
   String _timeString = '';
   String _dateString = '';
   late Timer _timer;
@@ -78,7 +80,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   }
 
   Color get colorBrandA => currentAccentColor;
-  Color get colorBrandB => _accentName == 'Mono' ? colorFire : currentAccentColor;
+  Color get colorBrandB =>
+      _accentName == 'Mono' ? colorFire : currentAccentColor;
   Color get colorAccentNeutral => currentAccentColor;
 
   // Category Accents
@@ -138,7 +141,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     )..repeat(reverse: true);
     _loadProfilesAndData();
     _updateDateTime();
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateDateTime());
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (Timer t) => _updateDateTime(),
+    );
   }
 
   @override
@@ -154,7 +160,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
   void _ensureCategoryFocusNodes(int count) {
     while (_categoryFocusNodes.length < count) {
-      _categoryFocusNodes.add(FocusNode(debugLabel: 'category_${_categoryFocusNodes.length}'));
+      _categoryFocusNodes.add(
+        FocusNode(debugLabel: 'category_${_categoryFocusNodes.length}'),
+      );
     }
     while (_categoryFocusNodes.length > count) {
       _categoryFocusNodes.removeLast().dispose();
@@ -164,8 +172,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   void _updateDateTime() {
     final now = DateTime.now();
     final timeFormatted = DateFormat('HH:mm').format(now);
-    final dateFormatted = DateFormat('EEEE, d MMMM', 'es').format(now); // Spanish dynamic format
-    
+    final dateFormatted = DateFormat(
+      'EEEE, d MMMM',
+      'es',
+    ).format(now); // Spanish dynamic format
+
     // Capitalize first letter of date
     String dateStr = dateFormatted;
     if (dateFormatted.isNotEmpty) {
@@ -185,7 +196,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     try {
       final movies = await _apiClient.getMovies(page: 1);
       final series = await _apiClient.getTvSeries(page: 1);
-      final continueWatching = await WatchHistoryService.getContinueWatching(limit: 12);
+      final continueWatching = await WatchHistoryService.getContinueWatching(
+        limit: 12,
+      );
 
       List<dynamic> liveChannels = [];
       try {
@@ -206,12 +219,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           ? _recentSeries.first
           : (_recentMovies.isNotEmpty ? _recentMovies.first : null);
       if (initialSlide != null) {
-        _updateFocusedItem(initialSlide, initialSlide['is_tvseries'] == '1' ? 'tvseries' : 'movie');
+        _updateFocusedItem(
+          initialSlide,
+          initialSlide['is_tvseries'] == '1' ? 'tvseries' : 'movie',
+        );
       }
     } catch (e, st) {
       debugPrint('DASHBOARD DATA LOAD ERROR: $e');
       debugPrint(st.toString());
-      await captureAndLogError(source: 'dashboard.loadData', error: e, stackTrace: st);
+      await captureAndLogError(
+        source: 'dashboard.loadData',
+        error: e,
+        stackTrace: st,
+      );
       _recentMovies = [];
       _recentSeries = [];
       _liveChannels = [];
@@ -222,16 +242,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           ? _recentSeries.first
           : (_recentMovies.isNotEmpty ? _recentMovies.first : null);
       if (initialSlide != null) {
-        _updateFocusedItem(initialSlide, initialSlide['is_tvseries'] == '1' ? 'tvseries' : 'movie');
+        _updateFocusedItem(
+          initialSlide,
+          initialSlide['is_tvseries'] == '1' ? 'tvseries' : 'movie',
+        );
       }
     }
     // 2. Load profiles and tweak settings from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     _accentName = prefs.getString('argon_tweak_accent') ?? 'Mono';
     _atmosphere = prefs.getBool('argon_tweak_atmosphere') ?? false;
-    
+
     final profilesJson = prefs.getStringList('argon_profiles') ?? [];
-    
+
     if (profilesJson.isEmpty) {
       // Setup default "Invitado" profile if completely empty
       final defaultProfile = {
@@ -245,25 +268,29 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       _activeProfile = defaultProfile;
       _showProfileSelector = true;
     } else {
-      _profiles = profilesJson.map((p) => Map<String, dynamic>.from(jsonDecode(p))).toList();
+      _profiles = profilesJson
+          .map((p) => Map<String, dynamic>.from(jsonDecode(p)))
+          .toList();
       final activeId = prefs.getString('argon_active_profile_id');
-      
+
       _activeProfile = _profiles.firstWhere(
         (p) => p['id'] == activeId,
         orElse: () => _profiles[0],
       );
-      
+
       if (activeId == null) {
         _showProfileSelector = true;
       }
     }
 
     if (_activeProfile != null) {
-      _myListItems = await MyListService.getItems(_activeProfile!['id'].toString());
+      _myListItems = await MyListService.getItems(
+        _activeProfile!['id'].toString(),
+      );
     }
 
     setState(() {});
-    
+
     if (!_showProfileSelector) {
       _startSlideshow();
     }
@@ -299,43 +326,46 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     final prefs = await SharedPreferences.getInstance();
     final newId = DateTime.now().millisecondsSinceEpoch.toString();
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'A';
-    
+
     final newProfile = {
       'id': newId,
       'name': name,
       'avatar': initial,
       'gradientIndex': gradientIndex,
     };
-    
+
     _profiles.add(newProfile);
-    
+
     final listJson = _profiles.map((p) => jsonEncode(p)).toList();
     await prefs.setStringList('argon_profiles', listJson);
-    
+
     setState(() {});
   }
 
   Future<void> _deleteProfile(Map<String, dynamic> profile) async {
     if (_profiles.length <= 1) return; // Prevent deleting the last profile
-    
+
     final prefs = await SharedPreferences.getInstance();
     _profiles.removeWhere((p) => p['id'] == profile['id']);
-    
+
     final listJson = _profiles.map((p) => jsonEncode(p)).toList();
     await prefs.setStringList('argon_profiles', listJson);
-    
+
     if (_activeProfile?['id'] == profile['id']) {
       _activeProfile = _profiles[0];
-      await prefs.setString('argon_active_profile_id', _activeProfile!['id'] as String);
+      await prefs.setString(
+        'argon_active_profile_id',
+        _activeProfile!['id'] as String,
+      );
     }
-    
+
     setState(() {});
   }
 
   void _showAddProfileDialog() {
     final textController = TextEditingController();
     int selectedGradIndex = 0;
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -349,7 +379,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
               title: Text(
                 'Crear Perfil',
-                style: GoogleFonts.sora(color: colorInk, fontWeight: FontWeight.bold),
+                style: GoogleFonts.sora(
+                  color: colorInk,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -393,7 +426,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         onKeyEvent: (node, event) {
                           if (event is KeyDownEvent &&
                               (event.logicalKey == LogicalKeyboardKey.enter ||
-                                  event.logicalKey == LogicalKeyboardKey.select)) {
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.select)) {
                             setDialogState(() => selectedGradIndex = index);
                             return KeyEventResult.handled;
                           }
@@ -410,27 +444,34 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(colors: avatarGradients[index]),
+                                  gradient: LinearGradient(
+                                    colors: avatarGradients[index],
+                                  ),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: isSelected 
-                                        ? Colors.white 
-                                        : (focused ? colorInk2 : Colors.transparent),
-                                    width: isSelected ? 3.0 : (focused ? 2.0 : 0.0),
+                                    color: isSelected
+                                        ? Colors.white
+                                        : (focused
+                                              ? colorInk2
+                                              : Colors.transparent),
+                                    width: isSelected
+                                        ? 3.0
+                                        : (focused ? 2.0 : 0.0),
                                   ),
                                   boxShadow: isSelected
                                       ? [
                                           BoxShadow(
-                                            color: avatarGradients[index][0].withOpacity(0.4),
+                                            color: avatarGradients[index][0]
+                                                .withOpacity(0.4),
                                             blurRadius: 8,
                                             spreadRadius: 1,
-                                          )
+                                          ),
                                         ]
                                       : [],
                                 ),
                               ),
                             );
-                          }
+                          },
                         ),
                       );
                     }),
@@ -442,7 +483,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   onPressed: () => Navigator.pop(context),
                   child: Text(
                     'Cancelar',
-                    style: GoogleFonts.outfit(color: colorInk3, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.outfit(
+                      color: colorInk3,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 ElevatedButton(
@@ -461,7 +505,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   },
                   child: Text(
                     'Guardar',
-                    style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -555,11 +602,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(
-          colors: [
-            color,
-            color.withOpacity(0.3),
-            Colors.transparent,
-          ],
+          colors: [color, color.withOpacity(0.3), Colors.transparent],
           stops: const [0.0, 0.5, 1.0],
         ),
       ),
@@ -580,7 +623,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
               title: Text(
                 'Tweaks / Estética',
-                style: GoogleFonts.sora(color: colorInk, fontWeight: FontWeight.bold),
+                style: GoogleFonts.sora(
+                  color: colorInk,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -600,7 +646,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         onKeyEvent: (node, event) {
                           if (event is KeyDownEvent &&
                               (event.logicalKey == LogicalKeyboardKey.enter ||
-                                  event.logicalKey == LogicalKeyboardKey.select)) {
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.select)) {
                             _setAccent(accent);
                             setDialogState(() {});
                             return KeyEventResult.handled;
@@ -617,30 +664,41 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               },
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isSelected 
-                                      ? currentAccentColor.withOpacity(0.2) 
-                                      : (focused ? colorSurface2 : colorSurface),
+                                  color: isSelected
+                                      ? currentAccentColor.withOpacity(0.2)
+                                      : (focused
+                                            ? colorSurface2
+                                            : colorSurface),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
                                         ? currentAccentColor
-                                        : (focused ? colorLineStrong : colorLine),
+                                        : (focused
+                                              ? colorLineStrong
+                                              : colorLine),
                                     width: 1.5,
                                   ),
                                 ),
                                 child: Text(
                                   accent,
                                   style: GoogleFonts.outfit(
-                                    color: isSelected ? Colors.white : colorInk2,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : colorInk2,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                     fontSize: 15,
                                   ),
                                 ),
                               ),
                             );
-                          }
+                          },
                         ),
                       );
                     }).toList(),
@@ -654,11 +712,18 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         children: [
                           Text(
                             'Atmósfera (Aurora animada)',
-                            style: GoogleFonts.outfit(color: colorInk, fontSize: 15, fontWeight: FontWeight.w600),
+                            style: GoogleFonts.outfit(
+                              color: colorInk,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           Text(
                             'Blobs de luz flotantes en fondo',
-                            style: GoogleFonts.outfit(color: colorInk3, fontSize: 12),
+                            style: GoogleFonts.outfit(
+                              color: colorInk3,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -666,7 +731,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         onKeyEvent: (node, event) {
                           if (event is KeyDownEvent &&
                               (event.logicalKey == LogicalKeyboardKey.enter ||
-                                  event.logicalKey == LogicalKeyboardKey.select)) {
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.select)) {
                             _setAtmosphere(!_atmosphere);
                             setDialogState(() {});
                             return KeyEventResult.handled;
@@ -691,7 +757,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   onPressed: () => Navigator.pop(context),
                   child: Text(
                     'Cerrar',
-                    style: GoogleFonts.outfit(color: colorInk2, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.outfit(
+                      color: colorInk2,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -707,14 +776,32 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     setState(() {
       _focusedItemData = item;
       _focusedType = type;
-      _focusedId = (item['movies_id'] ?? item['videos_id'] ?? item['id'] ?? '').toString();
+      _focusedId = (item['movies_id'] ?? item['videos_id'] ?? item['id'] ?? '')
+          .toString();
       _focusedTitle = (item['title'] ?? item['tv_name'] ?? '').toString();
-      _focusedBackdropUrl = (item['tmdb_backdrop_url'] ?? item['backdrop_url'] ?? item['image_url'] ?? item['thumbnail_url'] ?? item['poster_url'] ?? '').toString();
-      _focusedDesc = (item['description'] ?? 'No hay descripción disponible.').toString();
-      _focusedRating = (item['rating'] ?? item['rating_number'] ?? '8.5').toString();
-      _focusedYear = (item['release_year'] ?? item['year'] ?? '2026').toString();
-      _focusedDuration = (item['duration'] ?? (type == 'movie' ? '2 h 14 min' : '1 Temporada')).toString();
-      _focusedGenres = (item['genres'] ?? (type == 'movie' ? 'Ciencia ficción · Drama' : 'Animación · Aventura')).toString();
+      _focusedBackdropUrl =
+          (item['tmdb_backdrop_url'] ??
+                  item['backdrop_url'] ??
+                  item['image_url'] ??
+                  item['thumbnail_url'] ??
+                  item['poster_url'] ??
+                  '')
+              .toString();
+      _focusedDesc = (item['description'] ?? 'No hay descripción disponible.')
+          .toString();
+      _focusedRating = (item['rating'] ?? item['rating_number'] ?? '8.5')
+          .toString();
+      _focusedYear = (item['release_year'] ?? item['year'] ?? '2026')
+          .toString();
+      _focusedDuration =
+          (item['duration'] ?? (type == 'movie' ? '2 h 14 min' : '1 Temporada'))
+              .toString();
+      _focusedGenres =
+          (item['genres'] ??
+                  (type == 'movie'
+                      ? 'Ciencia ficción · Drama'
+                      : 'Animación · Aventura'))
+              .toString();
     });
   }
 
@@ -750,10 +837,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 650),
               transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: child,
-                );
+                return FadeTransition(opacity: animation, child: child);
               },
               child: _focusedBackdropUrl.isNotEmpty
                   ? CachedNetworkImage(
@@ -823,19 +907,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    colorBg.withOpacity(0.70),
-                    Colors.transparent,
-                  ],
+                  colors: [colorBg.withOpacity(0.70), Colors.transparent],
                   stops: const [0.0, 0.25],
                 ),
               ),
             ),
           ),
           // 4. AURORA ATMOSPHERIC BACKGROUND (Flashing/breathing blobs)
-          Positioned.fill(
-            child: _buildAuroraBackground(),
-          ),
+          Positioned.fill(child: _buildAuroraBackground()),
 
           // 5. MAIN SCROLLABLE CONTENT
           SafeArea(
@@ -893,7 +972,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     isTV: isTV,
                   ),
                   const SizedBox(height: 48),
-                  
+
                   // Navigation instructions
                   _buildFooterHint(isTV),
                 ],
@@ -965,32 +1044,48 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               FocusTraversalGroup(
                 policy: OrderedTraversalPolicy(),
                 child: Row(
-                children: [
-                  _buildTopNavItem('Inicio', isTV, () {}, isActive: true, focusOrder: const NumericFocusOrder(1)),
-                  SizedBox(width: 12 * tvScale),
-                  _buildTopNavItem(
-                    'Películas',
-                    isTV,
-                    () => _navigateToPage(const HomeScreen(apiEndpoint: 'movies', title: 'Peliculas')),
-                    focusOrder: const NumericFocusOrder(2),
-                  ),
-                  SizedBox(width: 12 * tvScale),
-                  _buildTopNavItem(
-                    'Series',
-                    isTV,
-                    () => _navigateToPage(const HomeScreen(apiEndpoint: 'tvseries', title: 'Series')),
-                    focusOrder: const NumericFocusOrder(3),
-                  ),
+                  children: [
+                    _buildTopNavItem(
+                      'Inicio',
+                      isTV,
+                      () {},
+                      isActive: true,
+                      focusOrder: const NumericFocusOrder(1),
+                    ),
+                    SizedBox(width: 12 * tvScale),
+                    _buildTopNavItem(
+                      'Películas',
+                      isTV,
+                      () => _navigateToPage(
+                        const HomeScreen(
+                          apiEndpoint: 'movies',
+                          title: 'Peliculas',
+                        ),
+                      ),
+                      focusOrder: const NumericFocusOrder(2),
+                    ),
+                    SizedBox(width: 12 * tvScale),
+                    _buildTopNavItem(
+                      'Series',
+                      isTV,
+                      () => _navigateToPage(
+                        const HomeScreen(
+                          apiEndpoint: 'tvseries',
+                          title: 'Series',
+                        ),
+                      ),
+                      focusOrder: const NumericFocusOrder(3),
+                    ),
 
-                  SizedBox(width: 12 * tvScale),
-                  _buildTopNavItem(
-                    'Mi Lista',
-                    isTV,
-                    () {},
-                    focusOrder: const NumericFocusOrder(5),
-                  ),
-                ],
-              ),
+                    SizedBox(width: 12 * tvScale),
+                    _buildTopNavItem(
+                      'Mi Lista',
+                      isTV,
+                      () {},
+                      focusOrder: const NumericFocusOrder(5),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
@@ -1000,71 +1095,79 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         FocusTraversalGroup(
           policy: OrderedTraversalPolicy(),
           child: Row(
-          children: [
-            // Live Clock
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _timeString,
-                  style: GoogleFonts.dmSans(
-                    color: colorInk,
-                    fontSize: isTV ? 28 : 18,
-                    fontWeight: FontWeight.w800,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+            children: [
+              RemoteControlStatusCard(isTV: isTV),
+              SizedBox(width: isTV ? 14 * tvScale : 10),
+              // Live Clock
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _timeString,
+                    style: GoogleFonts.dmSans(
+                      color: colorInk,
+                      fontSize: isTV ? 28 : 18,
+                      fontWeight: FontWeight.w800,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _dateString,
-                  style: GoogleFonts.dmSans(
-                    color: colorInk3,
-                    fontSize: isTV ? 13 : 10,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 2),
+                  Text(
+                    _dateString,
+                    style: GoogleFonts.dmSans(
+                      color: colorInk3,
+                      fontSize: isTV ? 13 : 10,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(width: isTV ? 14 * tvScale : 18),
+                ],
+              ),
+              SizedBox(width: isTV ? 14 * tvScale : 18),
 
-            // Search Icon Shortcut
-            _buildIconButton(
-              icon: Icons.search_rounded,
-              onPressed: () => _navigateToPage(const SearchScreen()),
-              isTV: isTV,
-              focusOrder: const NumericFocusOrder(10),
-            ),
-            SizedBox(width: isTV ? 8 * tvScale : 10),
+              // Search Icon Shortcut
+              _buildIconButton(
+                icon: Icons.search_rounded,
+                onPressed: () => _navigateToPage(const SearchScreen()),
+                isTV: isTV,
+                focusOrder: const NumericFocusOrder(10),
+              ),
+              SizedBox(width: isTV ? 8 * tvScale : 10),
 
-            // Settings / Diagnostics Icon Shortcut
-            _buildIconButton(
-              icon: Icons.settings_outlined,
-              onPressed: () => _navigateToPage(const SettingsScreen()),
-              isTV: isTV,
-              focusOrder: const NumericFocusOrder(11),
-            ),
-            SizedBox(width: isTV ? 8 * tvScale : 10),
+              // Settings / Diagnostics Icon Shortcut
+              _buildIconButton(
+                icon: Icons.settings_outlined,
+                onPressed: () => _navigateToPage(const SettingsScreen()),
+                isTV: isTV,
+                focusOrder: const NumericFocusOrder(11),
+              ),
+              SizedBox(width: isTV ? 8 * tvScale : 10),
 
-            // Tweaks Icon Shortcut
-            _buildIconButton(
-              icon: Icons.palette_outlined,
-              onPressed: _showTweaksDialog,
-              isTV: isTV,
-              focusOrder: const NumericFocusOrder(12),
-            ),
-            SizedBox(width: isTV ? 10 * tvScale : 12),
+              // Tweaks Icon Shortcut
+              _buildIconButton(
+                icon: Icons.palette_outlined,
+                onPressed: _showTweaksDialog,
+                isTV: isTV,
+                focusOrder: const NumericFocusOrder(12),
+              ),
+              SizedBox(width: isTV ? 10 * tvScale : 12),
 
-            // Profile Glassmorphic Badge with Dropdown Trigger
-            _buildProfileBadge(isTV, focusOrder: const NumericFocusOrder(13)),
-          ],
-        ),
+              // Profile Glassmorphic Badge with Dropdown Trigger
+              _buildProfileBadge(isTV, focusOrder: const NumericFocusOrder(13)),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildTopNavItem(String label, bool isTV, VoidCallback onTap, {bool isActive = false, FocusOrder? focusOrder}) {
+  Widget _buildTopNavItem(
+    String label,
+    bool isTV,
+    VoidCallback onTap, {
+    bool isActive = false,
+    FocusOrder? focusOrder,
+  }) {
     Widget child = Focus(
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent &&
@@ -1160,7 +1263,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
     if (focusOrder != null) {
@@ -1171,7 +1274,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
   Widget _buildProfileBadge(bool isTV, {FocusOrder? focusOrder}) {
     if (_activeProfile == null) return const SizedBox.shrink();
-    
+
     final gradIndex = _activeProfile!['gradientIndex'] as int? ?? 0;
     final colors = avatarGradients[gradIndex % avatarGradients.length];
 
@@ -1198,14 +1301,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             onTap: () => setState(() => _showDropdownMenu = !_showDropdownMenu),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              transform: focused ? (Matrix4.identity()..scale(1.04)) : Matrix4.identity(),
+              transform: focused
+                  ? (Matrix4.identity()..scale(1.04))
+                  : Matrix4.identity(),
               transformAlignment: Alignment.center,
-              padding: EdgeInsets.symmetric(horizontal: isTV ? 14 : 10, vertical: isTV ? 7 : 5),
+              padding: EdgeInsets.symmetric(
+                horizontal: isTV ? 14 : 10,
+                vertical: isTV ? 7 : 5,
+              ),
               decoration: BoxDecoration(
                 color: focused ? colorSurface2 : colorSurface,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: focused ? colorBrandB : colorLine, 
+                  color: focused ? colorBrandB : colorLine,
                   width: 1.2,
                 ),
               ),
@@ -1248,7 +1356,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
     if (focusOrder != null) {
@@ -1275,7 +1383,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 color: Colors.black54,
                 blurRadius: 40,
                 offset: Offset(0, 10),
-              )
+              ),
             ],
           ),
           child: Column(
@@ -1283,7 +1391,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 child: Text(
                   '¿QUIÉN ESTÁ VIENDO?',
                   style: GoogleFonts.outfit(
@@ -1295,12 +1406,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 ),
               ),
               const SizedBox(height: 6),
-              
+
               // Profiles List inside dropdown
               ..._profiles.map((p) {
                 final isCurrent = p['id'] == _activeProfile?['id'];
                 final gradIndex = p['gradientIndex'] as int? ?? 0;
-                final colors = avatarGradients[gradIndex % avatarGradients.length];
+                final colors =
+                    avatarGradients[gradIndex % avatarGradients.length];
 
                 return _buildProfileDropdownItem(
                   name: p['name'] as String,
@@ -1315,7 +1427,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               }).toList(),
 
               const Divider(color: colorLine, height: 16),
-              
+
               // Switch/manage actions
               _buildDropdownActionItem(
                 label: 'Cambiar Perfil',
@@ -1397,20 +1509,26 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       name,
                       style: GoogleFonts.outfit(
                         color: isCurrent ? colorInk : colorInk2,
-                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
+                        fontWeight: isCurrent
+                            ? FontWeight.bold
+                            : FontWeight.w500,
                         fontSize: 14,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  
+
                   // Active indicator or delete option
                   if (isCurrent)
                     Icon(Icons.check_rounded, color: colorBrandA, size: 16)
                   else if (onDelete != null)
                     IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.redAccent,
+                        size: 16,
+                      ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: onDelete,
@@ -1419,7 +1537,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -1467,7 +1585,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -1481,7 +1599,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     final numDots = _recentMovies.length.clamp(0, 5);
     final isSeries = _focusedType == 'tvseries';
     final tagText = isSeries ? 'TOP 1 EN SERIES' : 'DESTACADO DE HOY';
-    final posterUrl = (_focusedItemData?['poster_url'] ?? _focusedItemData?['thumbnail_url'] ?? _focusedItemData?['image_url'] ?? _focusedBackdropUrl).toString();
+    final posterUrl =
+        (_focusedItemData?['poster_url'] ??
+                _focusedItemData?['thumbnail_url'] ??
+                _focusedItemData?['image_url'] ??
+                _focusedBackdropUrl)
+            .toString();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1581,7 +1704,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     ),
                     SizedBox(height: isTV ? 14 * tvScale : 16),
                     ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: isTV ? 620 * tvScale : 640),
+                      constraints: BoxConstraints(
+                        maxWidth: isTV ? 620 * tvScale : 640,
+                      ),
                       child: Text(
                         _focusedDesc,
                         style: GoogleFonts.dmSans(
@@ -1607,7 +1732,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               isPrimary: true,
                               isTV: isTV,
                               onPressed: () {
-                                _navigateToDetails(_focusedId, _focusedType, _focusedTitle, posterUrl);
+                                _navigateToDetails(
+                                  _focusedId,
+                                  _focusedType,
+                                  _focusedTitle,
+                                  posterUrl,
+                                );
                               },
                             ),
                             SizedBox(width: isTV ? 10 * tvScale : 12),
@@ -1617,12 +1747,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               isPrimary: false,
                               isTV: isTV,
                               onPressed: () {
-                                _navigateToDetails(_focusedId, _focusedType, _focusedTitle, posterUrl);
+                                _navigateToDetails(
+                                  _focusedId,
+                                  _focusedType,
+                                  _focusedTitle,
+                                  posterUrl,
+                                );
                               },
                             ),
                             SizedBox(width: isTV ? 10 * tvScale : 12),
                             _buildCircleIconButton(
-                              icon: _isFocusedInMyList() ? Icons.check_rounded : Icons.add_rounded,
+                              icon: _isFocusedInMyList()
+                                  ? Icons.check_rounded
+                                  : Icons.add_rounded,
                               isTV: isTV,
                               onPressed: _toggleFocusedMyList,
                             ),
@@ -1641,7 +1778,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                   width: isActive ? 34 : 12,
                                   height: 4,
                                   decoration: BoxDecoration(
-                                    color: isActive ? Colors.white : colorInk3.withOpacity(0.35),
+                                    color: isActive
+                                        ? Colors.white
+                                        : colorInk3.withOpacity(0.35),
                                     borderRadius: BorderRadius.circular(99),
                                   ),
                                 );
@@ -1678,8 +1817,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         child: CachedNetworkImage(
                           imageUrl: posterUrl,
                           fit: BoxFit.cover,
-                          memCacheWidth: ((isTV ? 140 * tvScale : 90) * MediaQuery.of(context).devicePixelRatio).round(),
-                          memCacheHeight: ((isTV ? 210 * tvScale : 135) * MediaQuery.of(context).devicePixelRatio).round(),
+                          memCacheWidth:
+                              ((isTV ? 140 * tvScale : 90) *
+                                      MediaQuery.of(context).devicePixelRatio)
+                                  .round(),
+                          memCacheHeight:
+                              ((isTV ? 210 * tvScale : 135) *
+                                      MediaQuery.of(context).devicePixelRatio)
+                                  .round(),
                           errorWidget: (context, url, error) => Container(
                             color: colorBg2,
                             child: const Icon(Icons.movie, color: colorInk3),
@@ -1699,7 +1844,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             width: isActive ? 24 : 8,
                             height: 4,
                             decoration: BoxDecoration(
-                              color: isActive ? colorBrandA : colorInk3.withOpacity(0.35),
+                              color: isActive
+                                  ? colorBrandA
+                                  : colorInk3.withOpacity(0.35),
                               borderRadius: BorderRadius.circular(99),
                             ),
                           );
@@ -1777,7 +1924,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -1795,36 +1942,44 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         'icon': Icons.movie_outlined,
         'subtitle': '$movieCount disponibles',
         'accent': accentPeliculas,
-        'onTap': () => _navigateToPage(const HomeScreen(apiEndpoint: 'movies', title: 'Peliculas')),
+        'onTap': () => _navigateToPage(
+          const HomeScreen(apiEndpoint: 'movies', title: 'Peliculas'),
+        ),
       },
       {
         'title': 'Series',
         'icon': Icons.tv_outlined,
         'subtitle': '$seriesCount disponibles',
         'accent': accentSeries,
-        'onTap': () => _navigateToPage(const HomeScreen(apiEndpoint: 'tvseries', title: 'Series')),
+        'onTap': () => _navigateToPage(
+          const HomeScreen(apiEndpoint: 'tvseries', title: 'Series'),
+        ),
       },
       {
         'title': 'Anime',
         'icon': Icons.animation_sharp,
         'subtitle': '$animeCount seleccionadas',
         'accent': accentAnime,
-        'onTap': () => _navigateToPage(const HomeScreen(
-              apiEndpoint: 'tvseries',
-              title: 'Anime',
-              initialCategory: SeriesCategory.anime,
-            )),
+        'onTap': () => _navigateToPage(
+          const HomeScreen(
+            apiEndpoint: 'tvseries',
+            title: 'Anime',
+            initialCategory: SeriesCategory.anime,
+          ),
+        ),
       },
       {
         'title': 'Telenovelas',
         'icon': Icons.favorite_border_rounded,
         'subtitle': 'coleccion',
         'accent': accentTelenovelas,
-        'onTap': () => _navigateToPage(const HomeScreen(
-              apiEndpoint: 'tvseries',
-              title: 'Telenovelas',
-              initialCategory: SeriesCategory.novelas,
-            )),
+        'onTap': () => _navigateToPage(
+          const HomeScreen(
+            apiEndpoint: 'tvseries',
+            title: 'Telenovelas',
+            initialCategory: SeriesCategory.novelas,
+          ),
+        ),
       },
     ];
     _ensureCategoryFocusNodes(categories.length);
@@ -1859,9 +2014,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             builder: (context, constraints) {
               final width = constraints.maxWidth;
               const crossAxisCount = 4; // Adjust to 4 since we removed 3 items
-              final spacing = 16.0 * tvScale; // Increased spacing for premium look
-              final tileWidth = (width - ((crossAxisCount - 1) * spacing)) / crossAxisCount;
-              final tileHeight = tileWidth * 0.60; // Slightly shorter for cinematic look
+              final spacing =
+                  16.0 * tvScale; // Increased spacing for premium look
+              final tileWidth =
+                  (width - ((crossAxisCount - 1) * spacing)) / crossAxisCount;
+              final tileHeight =
+                  tileWidth * 0.60; // Slightly shorter for cinematic look
               final ratio = tileWidth / tileHeight;
 
               return FocusTraversalGroup(
@@ -1986,14 +2144,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             onTap: onTap,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              transform: focused ? (Matrix4.identity()..scale(1.05)) : Matrix4.identity(),
+              transform: focused
+                  ? (Matrix4.identity()..scale(1.05))
+                  : Matrix4.identity(),
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: focused 
-                      ? Colors.white
-                      : colorLine.withOpacity(0.3),
+                  color: focused ? Colors.white : colorLine.withOpacity(0.3),
                   width: focused ? 3.0 : 1.0,
                 ),
                 boxShadow: focused
@@ -2002,7 +2160,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           color: Colors.white.withOpacity(0.25),
                           blurRadius: 25,
                           spreadRadius: 2,
-                        )
+                        ),
                       ]
                     : [],
               ),
@@ -2012,10 +2170,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                        color: focused 
-                        ? colorGlassStrong
-                        : colorGlass,
-                     padding: EdgeInsets.symmetric(
+                    color: focused ? colorGlassStrong : colorGlass,
+                    padding: EdgeInsets.symmetric(
                       horizontal: isTV ? 10 : 12,
                       vertical: isTV ? 10 : 10,
                     ),
@@ -2032,10 +2188,17 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white.withOpacity(0.20), width: 1.0),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.20),
+                                  width: 1.0,
+                                ),
                               ),
                               alignment: Alignment.center,
-                              child: Icon(icon, color: Colors.white, size: isTV ? 20 : 20),
+                              child: Icon(
+                                icon,
+                                color: Colors.white,
+                                size: isTV ? 20 : 20,
+                              ),
                             ),
                           ],
                         ),
@@ -2073,14 +2236,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
     if (focusOrder != null) {
-      child = FocusTraversalOrder(
-        order: focusOrder,
-        child: child,
-      );
+      child = FocusTraversalOrder(order: focusOrder, child: child);
     }
     return child;
   }
@@ -2118,7 +2278,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   bool _isFocusedInMyList() {
     if (_focusedId.isEmpty) return false;
     return _myListItems.any((item) {
-      final id = (item['movies_id'] ?? item['id'] ?? item['media_id'] ?? '').toString();
+      final id = (item['movies_id'] ?? item['id'] ?? item['media_id'] ?? '')
+          .toString();
       return id == _focusedId;
     });
   }
@@ -2126,7 +2287,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   Future<void> _toggleFocusedMyList() async {
     if (_focusedId.isEmpty || _activeProfile == null) return;
     final profileId = _activeProfile!['id'].toString();
-    
+
     final item = _recentMovies.firstWhere(
       (m) => (m['movies_id'] ?? m['id'] ?? '').toString() == _focusedId,
       orElse: () => _recentSeries.firstWhere(
@@ -2134,17 +2295,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         orElse: () => null,
       ),
     );
-    
-    final payload = item ?? {
-      'id': _focusedId,
-      'title': _focusedTitle,
-      'poster_url': _focusedBackdropUrl,
-      'description': _focusedDesc,
-      'genre': _focusedGenres,
-      'year': _focusedYear,
-      'release_year': _focusedYear,
-      'media_type': _focusedType,
-    };
+
+    final payload =
+        item ??
+        {
+          'id': _focusedId,
+          'title': _focusedTitle,
+          'poster_url': _focusedBackdropUrl,
+          'description': _focusedDesc,
+          'genre': _focusedGenres,
+          'year': _focusedYear,
+          'release_year': _focusedYear,
+          'media_type': _focusedType,
+        };
 
     await MyListService.toggleItem(
       profileId: profileId,
@@ -2152,7 +2315,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       mediaType: _focusedType,
       mediaId: _focusedId,
     );
-    
+
     final updatedList = await MyListService.getItems(profileId);
     setState(() {
       _myListItems = updatedList;
@@ -2178,7 +2341,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
     _animePicks = series.where((s) {
       final genres = (s['genres'] as String? ?? '').toLowerCase();
-      return genres.contains('anime') || genres.contains('animac') || genres.contains('cartoon');
+      return genres.contains('anime') ||
+          genres.contains('animac') ||
+          genres.contains('cartoon');
     }).toList();
     if (_animePicks.isEmpty) {
       _animePicks = series.skip(2).take(8).toList();
@@ -2213,32 +2378,38 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           child: FocusTraversalGroup(
             policy: OrderedTraversalPolicy(),
             child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final imageUrl = item['poster_url'] ?? item['thumbnail_url'] ?? item['image_url'] ?? '';
-              final name = item['title'] ?? item['tv_name'] ?? '';
-              final itemId = (item['media_id'] ?? item['videos_id'] ?? item['id'] ?? '').toString();
-              final type = (item['media_type'] ?? 'movie').toString();
-              
-              final progress = (item['progress'] as num?)?.toDouble() ?? 0.0;
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final imageUrl =
+                    item['poster_url'] ??
+                    item['thumbnail_url'] ??
+                    item['image_url'] ??
+                    '';
+                final name = item['title'] ?? item['tv_name'] ?? '';
+                final itemId =
+                    (item['media_id'] ?? item['videos_id'] ?? item['id'] ?? '')
+                        .toString();
+                final type = (item['media_type'] ?? 'movie').toString();
 
-              return Padding(
-                padding: EdgeInsets.only(right: isTV ? 10.0 * tvScale : 22.0),
-                child: _buildLandscapeCard(
-                  name: name,
-                  imageUrl: imageUrl,
-                  itemId: itemId,
-                  type: type,
-                  progress: progress,
-                  itemData: item,
-                  isTV: isTV,
-                  focusOrder: NumericFocusOrder(index.toDouble()),
-                ),
-              );
-            },
-          ),
+                final progress = (item['progress'] as num?)?.toDouble() ?? 0.0;
+
+                return Padding(
+                  padding: EdgeInsets.only(right: isTV ? 10.0 * tvScale : 22.0),
+                  child: _buildLandscapeCard(
+                    name: name,
+                    imageUrl: imageUrl,
+                    itemId: itemId,
+                    type: type,
+                    progress: progress,
+                    itemData: item,
+                    isTV: isTV,
+                    focusOrder: NumericFocusOrder(index.toDouble()),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -2283,7 +2454,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             onTap: () => _navigateToDetails(itemId, type, name, imageUrl),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              transform: focused ? (Matrix4.identity()..scale(1.05)) : Matrix4.identity(),
+              transform: focused
+                  ? (Matrix4.identity()..scale(1.05))
+                  : Matrix4.identity(),
               transformAlignment: Alignment.center,
               width: cardWidth,
               child: Column(
@@ -2306,26 +2479,34 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 color: Colors.white.withOpacity(0.25),
                                 blurRadius: 25,
                                 spreadRadius: 2,
-                              )
+                              ),
                             ]
                           : [],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(focused ? 11.5 : 13.0),
+                      borderRadius: BorderRadius.circular(
+                        focused ? 11.5 : 13.0,
+                      ),
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
                           CachedNetworkImage(
                             imageUrl: imageUrl,
                             fit: BoxFit.cover,
-                            memCacheWidth: (cardWidth * MediaQuery.of(context).devicePixelRatio).round(),
-                            memCacheHeight: (cardHeight * MediaQuery.of(context).devicePixelRatio).round(),
+                            memCacheWidth:
+                                (cardWidth *
+                                        MediaQuery.of(context).devicePixelRatio)
+                                    .round(),
+                            memCacheHeight:
+                                (cardHeight *
+                                        MediaQuery.of(context).devicePixelRatio)
+                                    .round(),
                             errorWidget: (c, u, e) => Container(
                               color: colorBg2,
                               child: const Icon(Icons.movie, color: colorInk3),
                             ),
                           ),
-                          
+
                           // Hover / Focus Play indicator
                           Positioned.fill(
                             child: AnimatedOpacity(
@@ -2410,7 +2591,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
     if (focusOrder != null) {
@@ -2446,29 +2627,31 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           child: FocusTraversalGroup(
             policy: OrderedTraversalPolicy(),
             child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final imageUrl = item['poster_url'] ?? item['thumbnail_url'] ?? '';
-              final name = item['title'] ?? item['tv_name'] ?? '';
-              final itemId = (item['videos_id'] ?? item['id'] ?? '').toString();
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final imageUrl =
+                    item['poster_url'] ?? item['thumbnail_url'] ?? '';
+                final name = item['title'] ?? item['tv_name'] ?? '';
+                final itemId = (item['videos_id'] ?? item['id'] ?? '')
+                    .toString();
 
-              return Padding(
-                padding: EdgeInsets.only(right: isTV ? 10.0 * tvScale : 20.0),
-                child: _buildMovieCard(
-                  name: name,
-                  imageUrl: imageUrl,
-                  itemId: itemId,
-                  type: type,
-                  itemData: item,
-                  rank: index + 1,
-                  isTV: isTV,
-                  focusOrder: NumericFocusOrder(index.toDouble()),
-                ),
-              );
-            },
-          ),
+                return Padding(
+                  padding: EdgeInsets.only(right: isTV ? 10.0 * tvScale : 20.0),
+                  child: _buildMovieCard(
+                    name: name,
+                    imageUrl: imageUrl,
+                    itemId: itemId,
+                    type: type,
+                    itemData: item,
+                    rank: index + 1,
+                    isTV: isTV,
+                    focusOrder: NumericFocusOrder(index.toDouble()),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -2513,7 +2696,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             onTap: () => _navigateToDetails(itemId, type, name, imageUrl),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              transform: focused ? (Matrix4.identity()..scale(1.05)) : Matrix4.identity(),
+              transform: focused
+                  ? (Matrix4.identity()..scale(1.05))
+                  : Matrix4.identity(),
               transformAlignment: Alignment.center,
               width: width,
               child: Column(
@@ -2535,12 +2720,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 color: Colors.white.withOpacity(0.25),
                                 blurRadius: 25,
                                 spreadRadius: 2,
-                              )
+                              ),
                             ]
                           : [],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(focused ? 11.5 : 13.0),
+                      borderRadius: BorderRadius.circular(
+                        focused ? 11.5 : 13.0,
+                      ),
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
@@ -2548,18 +2735,34 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               ? CachedNetworkImage(
                                   imageUrl: imageUrl,
                                   fit: BoxFit.cover,
-                                  memCacheWidth: (width * MediaQuery.of(context).devicePixelRatio).round(),
-                                  memCacheHeight: (height * MediaQuery.of(context).devicePixelRatio).round(),
+                                  memCacheWidth:
+                                      (width *
+                                              MediaQuery.of(
+                                                context,
+                                              ).devicePixelRatio)
+                                          .round(),
+                                  memCacheHeight:
+                                      (height *
+                                              MediaQuery.of(
+                                                context,
+                                              ).devicePixelRatio)
+                                          .round(),
                                   errorWidget: (c, u, e) => Container(
                                     color: colorBg2,
-                                    child: const Icon(Icons.movie, color: colorInk3),
+                                    child: const Icon(
+                                      Icons.movie,
+                                      color: colorInk3,
+                                    ),
                                   ),
                                 )
                               : Container(
                                   color: colorBg2,
-                                  child: const Icon(Icons.movie, color: colorInk3),
+                                  child: const Icon(
+                                    Icons.movie,
+                                    color: colorInk3,
+                                  ),
                                 ),
-                          
+
                           // Rank float tag
                           if (isTV && rank <= 5)
                             Positioned(
@@ -2571,7 +2774,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 decoration: BoxDecoration(
                                   color: Colors.black.withOpacity(0.75),
                                   borderRadius: BorderRadius.circular(9),
-                                  border: Border.all(color: colorLineStrong, width: 1),
+                                  border: Border.all(
+                                    color: colorLineStrong,
+                                    width: 1,
+                                  ),
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
@@ -2591,7 +2797,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               top: 12,
                               right: 12,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
                                   color: colorBrandB,
                                   borderRadius: BorderRadius.circular(7),
@@ -2612,7 +2821,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     ),
                   ),
                   SizedBox(height: isTV ? 6 * tvScale : 8),
-                  
+
                   // Text name
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -2631,7 +2840,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
     if (focusOrder != null) {
@@ -2654,19 +2863,30 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             ),
             child: Text(
               '▲ ▼ ◀ ▶',
-              style: GoogleFonts.outfit(color: colorInk2, fontSize: 13, fontWeight: FontWeight.bold),
+              style: GoogleFonts.outfit(
+                color: colorInk2,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 10),
           Text(
             'Navega con el control remoto',
-            style: GoogleFonts.outfit(color: colorInk3, fontSize: 14, fontWeight: FontWeight.w500),
+            style: GoogleFonts.outfit(
+              color: colorInk3,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(width: 14),
           Container(
             width: 4,
             height: 4,
-            decoration: const BoxDecoration(color: colorLineStrong, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: colorLineStrong,
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 14),
           Container(
@@ -2678,13 +2898,21 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             ),
             child: Text(
               'OK',
-              style: GoogleFonts.outfit(color: colorInk2, fontSize: 13, fontWeight: FontWeight.bold),
+              style: GoogleFonts.outfit(
+                color: colorInk2,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 10),
           Text(
             'Seleccionar',
-            style: GoogleFonts.outfit(color: colorInk3, fontSize: 14, fontWeight: FontWeight.w500),
+            style: GoogleFonts.outfit(
+              color: colorInk3,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -2710,7 +2938,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 ),
               ),
             ),
-          
+
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(
@@ -2758,7 +2986,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       // List Profiles
                       ..._profiles.map((p) {
                         final gradIndex = p['gradientIndex'] as int? ?? 0;
-                        final colors = avatarGradients[gradIndex % avatarGradients.length];
+                        final colors =
+                            avatarGradients[gradIndex % avatarGradients.length];
 
                         return _buildProfileCard(
                           name: p['name'] as String,
@@ -2773,19 +3002,21 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       }).toList(),
 
                       // "Add Profile" card if profiles count is < 6
-                      if (_profiles.length < 6)
-                        _buildAddProfileCard(isTV),
+                      if (_profiles.length < 6) _buildAddProfileCard(isTV),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 48),
-                  
+
                   // Footer instruction
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: colorSurface,
                           borderRadius: BorderRadius.circular(6),
@@ -2793,13 +3024,20 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         ),
                         child: Text(
                           '◀ ▶',
-                          style: GoogleFonts.outfit(color: colorInk2, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.outfit(
+                            color: colorInk2,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Navega y pulsa OK para seleccionar tu perfil',
-                        style: GoogleFonts.outfit(color: colorInk3, fontSize: 13),
+                        style: GoogleFonts.outfit(
+                          color: colorInk3,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -2839,7 +3077,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             onTap: onTap,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              transform: focused ? (Matrix4.identity()..scale(1.08)) : Matrix4.identity(),
+              transform: focused
+                  ? (Matrix4.identity()..scale(1.08))
+                  : Matrix4.identity(),
               transformAlignment: Alignment.center,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2868,7 +3108,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                     color: colors[0].withOpacity(0.4),
                                     blurRadius: 20,
                                     spreadRadius: 2,
-                                  )
+                                  ),
                                 ]
                               : [],
                         ),
@@ -2882,7 +3122,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           ),
                         ),
                       ),
-                      
+
                       // Delete float button (only if not focused and has more than 1 profile)
                       if (onDelete != null && !isCurrentProfileGuest(name))
                         Positioned(
@@ -2908,7 +3148,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     ],
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Profile name
                   Text(
                     name,
@@ -2924,7 +3164,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -2953,7 +3193,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             onTap: _showAddProfileDialog,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              transform: focused ? (Matrix4.identity()..scale(1.08)) : Matrix4.identity(),
+              transform: focused
+                  ? (Matrix4.identity()..scale(1.08))
+                  : Matrix4.identity(),
               transformAlignment: Alignment.center,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2974,7 +3216,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               BoxShadow(
                                 color: colorBrandB.withOpacity(0.2),
                                 blurRadius: 15,
-                              )
+                              ),
                             ]
                           : [],
                     ),
@@ -2998,7 +3240,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -3007,10 +3249,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     return Container(
       width: 4,
       height: 4,
-      decoration: const BoxDecoration(
-        color: colorInk3,
-        shape: BoxShape.circle,
-      ),
+      decoration: const BoxDecoration(color: colorInk3, shape: BoxShape.circle),
     );
   }
 
@@ -3045,7 +3284,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             onTap: onPressed,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
-              transform: focused ? (Matrix4.identity()..scale(1.05)) : Matrix4.identity(),
+              transform: focused
+                  ? (Matrix4.identity()..scale(1.05))
+                  : Matrix4.identity(),
               transformAlignment: Alignment.center,
               padding: EdgeInsets.symmetric(
                 horizontal: isTV ? 22 * tvScale : 18,
@@ -3072,7 +3313,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               ? colorCrimson.withOpacity(0.35)
                               : colorBrandA.withOpacity(0.24),
                           blurRadius: 18,
-                        )
+                        ),
                       ]
                     : [],
               ),
@@ -3097,21 +3338,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
 
   void _navigateToPage(Widget page) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => page),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) => page));
   }
 
   Future<void> _showQuickJoinWatchParty() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedName = (prefs.getString('argon_watch_party_name') ?? 'Invitado').trim();
+    final savedName = (prefs.getString('argon_watch_party_name') ?? 'Invitado')
+        .trim();
     final roomController = TextEditingController();
     String info = '';
     if (!mounted) return;
@@ -3122,7 +3361,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: const Color(0xFF161622),
-              title: const Text('Unirse a sala', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Unirse a sala',
+                style: TextStyle(color: Colors.white),
+              ),
               content: SizedBox(
                 width: 420,
                 child: Column(
@@ -3137,7 +3379,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     TextField(
                       controller: roomController,
                       autofocus: true,
-                      style: const TextStyle(color: Colors.white, letterSpacing: 2),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        letterSpacing: 2,
+                      ),
                       textCapitalization: TextCapitalization.characters,
                       decoration: const InputDecoration(
                         labelText: 'Codigo de sala',
@@ -3149,7 +3394,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     ),
                     if (info.isNotEmpty) ...[
                       const SizedBox(height: 12),
-                      Text(info, style: const TextStyle(color: Colors.orangeAccent)),
+                      Text(
+                        info,
+                        style: const TextStyle(color: Colors.orangeAccent),
+                      ),
                     ],
                   ],
                 ),
@@ -3200,7 +3448,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     );
   }
 
-  void _navigateToDetails(String id, String type, String title, String posterUrl) {
+  void _navigateToDetails(
+    String id,
+    String type,
+    String title,
+    String posterUrl,
+  ) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -3220,5 +3473,3 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     });
   }
 }
-
-
