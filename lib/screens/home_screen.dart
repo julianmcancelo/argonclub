@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_client.dart';
+import '../theme/argon_theme.dart';
 import 'details_screen.dart';
 import 'search_screen.dart';
 
@@ -48,25 +49,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late SeriesCategory _selectedCategory;
 
   // Color System matching Dashboard
-  static const Color colorBg = Color(0xFF060606);
-  static const Color colorBg2 = Color(0xFF0C0C0E);
+  static const Color colorBg = Color(0xFF020A14);
+  static const Color colorBg2 = ArgonTheme.navy;
   static const Color colorSurface = Color(0x12161618);
   static const Color colorSurface2 = Color(0xCC17171A);
   static const Color colorLine = Color(0x22FFFFFF);
   static const Color colorLineStrong = Color(0x42FFFFFF);
-  static const Color colorInk = Color(0xFFF4F1EA);
-  static const Color colorInk2 = Color(0xFFD2CDC4);
-  static const Color colorInk3 = Color(0xFF8E877D);
-  static const Color colorCrimson = Color(0xFFE63946);
-  static const Color colorCrimsonSoft = Color(0xFFFF6B6B);
-  static const Color colorFire = Color(0xFFF97316);
+  static const Color colorInk = ArgonTheme.white;
+  static const Color colorInk2 = Color(0xFFD9ECF8);
+  static const Color colorInk3 = Color(0xFF86A7C0);
+  static const Color colorCrimson = ArgonTheme.sky;
+  static const Color colorCrimsonSoft = ArgonTheme.skyBright;
+  static const Color colorFire = ArgonTheme.gold;
 
   Color get currentAccentColor {
     switch (_accentName) {
       case 'Arena':
-        return const Color(0xFFF2C078);
+        return ArgonTheme.gold;
       case 'Niebla':
-        return const Color(0xFFB7D8EE);
+        return ArgonTheme.skyBright;
       case 'Mono':
       default:
         return colorCrimsonSoft;

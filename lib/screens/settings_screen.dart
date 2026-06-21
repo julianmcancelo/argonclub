@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/error_logger.dart';
+import '../theme/argon_theme.dart';
 import 'remote_control_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -31,15 +32,15 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   late AnimationController _auroraController;
 
   // Custom design system constants
-  static const Color colorBg = Color(0xFF0A0A0D);
-  static const Color colorBg2 = Color(0xFF0D0D12);
+  static const Color colorBg = Color(0xFF020A14);
+  static const Color colorBg2 = ArgonTheme.navy;
   static const Color colorSurface = Color(0x0CFFFFFF);      // --surface: rgba(255,255,255,.045)
   static const Color colorSurface2 = Color(0x12FFFFFF);     // --surface-2: rgba(255,255,255,.07)
   static const Color colorLine = Color(0x17FFFFFF);         // --line: rgba(255,255,255,.09)
   static const Color colorLineStrong = Color(0x28FFFFFF);   // --line-strong: rgba(255,255,255,.16)
-  static const Color colorInk = Color(0xFFF4F4F7);
-  static const Color colorInk2 = Color(0xFFB7B7C2);
-  static const Color colorInk3 = Color(0xFF7C7C89);
+  static const Color colorInk = ArgonTheme.white;
+  static const Color colorInk2 = Color(0xFFD9ECF8);
+  static const Color colorInk3 = Color(0xFF86A7C0);
 
   // Profile avatar colors / gradients
   static const List<List<Color>> avatarGradients = [

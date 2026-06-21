@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'screens/splash_screen.dart';
 import 'screens/search_screen.dart';
+import 'theme/argon_theme.dart';
 import 'services/error_logger.dart';
 import 'services/remote_control_service.dart';
 
@@ -73,14 +74,7 @@ class _MyAppState extends State<MyApp> {
         const SingleActivator(LogicalKeyboardKey.arrowRight):
             const DirectionalFocusIntent(TraversalDirection.right),
       },
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.red,
-        scaffoldBackgroundColor: Colors.black,
-        // Disable scrollbars on TV
-        scrollbarTheme: ScrollbarThemeData(
-          thickness: WidgetStateProperty.all(0),
-        ),
+      theme: ArgonTheme.darkTheme().copyWith(
         textTheme: GoogleFonts.interTextTheme(
           Theme.of(context).textTheme.apply(
             bodyColor: Colors.white,

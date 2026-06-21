@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../theme/argon_theme.dart';
 import 'dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -56,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF020A14),
       body: Stack(
         children: [
           Center(
@@ -67,10 +69,68 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   opacity: _opacityAnimation.value,
                   child: Transform.scale(
                     scale: _scaleAnimation.value,
-                    child: Image.asset(
-                      'assets/icon.png',
-                      width: 150,
-                      height: 150,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(32),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: ArgonTheme.sky.withOpacity(0.35),
+                                  blurRadius: 36,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Image.asset(
+                              'assets/mascot.png',
+                              width: 210,
+                              height: 210,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'ARGON',
+                              style: GoogleFonts.bebasNeue(
+                                color: ArgonTheme.sky,
+                                fontSize: 44,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            Text(
+                              'CLUB',
+                              style: GoogleFonts.bebasNeue(
+                                color: Colors.white,
+                                fontSize: 44,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Icon(
+                              Icons.pets_rounded,
+                              color: ArgonTheme.gold,
+                              size: 32,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Cargando diversión argentina... 🐾🇦🇷',
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFD9ECF8),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -83,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             right: 0,
             child: Center(
               child: Text(
-                'v1.4.3+14 (Vidaa Web Vercel)',
+                'v1.4.4+15 (Vidaa Web Vercel 🐾)',
                 style: const TextStyle(
                   color: Colors.white24,
                   fontSize: 12,

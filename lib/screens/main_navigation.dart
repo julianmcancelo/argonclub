@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../theme/argon_theme.dart';
 
 import 'home_dashboard_screen.dart';
 import 'home_screen.dart';
@@ -178,7 +180,7 @@ class _MainNavigationState extends State<MainNavigation> {
       body: pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
-        selectedItemColor: Colors.red,
+        selectedItemColor: ArgonTheme.sky,
         unselectedItemColor: Colors.white54,
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
@@ -248,21 +250,21 @@ class _TVNavItemState extends State<_TVNavItem> {
           width: 96,
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isHighlighted ? Colors.red.withOpacity(0.2) : Colors.transparent,
+            color: isHighlighted ? ArgonTheme.sky.withOpacity(0.2) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: _isFocused
-                ? Border.all(color: Colors.red, width: 2)
+                ? Border.all(color: ArgonTheme.sky, width: 2)
                 : Border.all(color: Colors.transparent, width: 2),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(widget.icon, color: isHighlighted ? Colors.red : Colors.white54, size: 32),
+              Icon(widget.icon, color: isHighlighted ? ArgonTheme.sky : Colors.white54, size: 32),
               const SizedBox(height: 4),
               Text(
                 widget.label,
                 style: TextStyle(
-                  color: isHighlighted ? Colors.red : Colors.white54,
+                  color: isHighlighted ? ArgonTheme.sky : Colors.white54,
                   fontSize: 11,
                   fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -348,19 +350,19 @@ class _TVRemoteStatusIndicatorState extends State<_TVRemoteStatusIndicator> {
         margin: const EdgeInsets.only(top: 24),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.orange.withOpacity(0.1),
+          color: ArgonTheme.gold.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+          border: Border.all(color: ArgonTheme.gold.withOpacity(0.3)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.settings_remote_rounded, color: Colors.orange, size: 16),
+            const Icon(Icons.settings_remote_rounded, color: ArgonTheme.gold, size: 16),
             const SizedBox(height: 4),
             Text(
               'RC: $_code',
               style: const TextStyle(
-                color: Colors.orange,
+                color: ArgonTheme.gold,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
