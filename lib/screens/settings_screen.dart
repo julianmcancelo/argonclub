@@ -476,7 +476,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildSystemInfoRow('Versión', '1.0.0 (AAB Store Build)', isTv),
+                  _buildSystemInfoRow('Versión', '1.4.3+14 (Vidaa Web Vercel)', isTv),
                   _buildSystemInfoRow('Modo de Interfaz', 'Smart TV Horizontal', isTv),
                   _buildSystemInfoRow('Acento de Color Activo', _accentName, isTv),
                   _buildSystemInfoRow('Fondo Atmósfera', _atmosphere ? 'Activado' : 'Desactivado', isTv),

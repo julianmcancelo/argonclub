@@ -35,6 +35,7 @@ class RemoteControlService {
   Stream<String> get remoteSearchStream => _remoteSearchController.stream;
 
   Future<void> connect() async {
+    _reconnectTimer?.cancel();
     if (_connected) return;
 
     final candidates = <String>[
@@ -60,7 +61,18 @@ class RemoteControlService {
         lastError = e;
       }
     }
+    
+    _scheduleReconnect();
     throw lastError ?? StateError('No se pudo conectar al servidor de control remoto');
+  }
+
+  void _scheduleReconnect() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(const Duration(seconds: 5), () {
+      connect().then((_) {
+        registerTv();
+      }).catchError((_) {});
+    });
   }
 
   void _onClosed() {
@@ -69,13 +81,7 @@ class RemoteControlService {
     _pairingCode = null;
     _pairingStatusController.add(false);
 
-    // Auto-reconnect after 3 seconds
-    _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(const Duration(seconds: 3), () {
-      connect().then((_) {
-        registerTv();
-      }).catchError((_) {});
-    });
+    _scheduleReconnect();
   }
 
   // TV Side: Request pairing code

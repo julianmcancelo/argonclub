@@ -221,34 +221,87 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(
-                          width: 24, height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
+                  : _error != null
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.cloud_off_rounded, color: Colors.redAccent, size: 40),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Error de Conexión',
+                              style: GoogleFonts.sora(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                color: Colors.white.withOpacity(0.5),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _connect,
+                              icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
+                              label: Text(
+                                'Reintentar',
+                                style: GoogleFonts.sora(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFF97316),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              width: 24, height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              'Conectando...',
+                              style: GoogleFonts.sora(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 4,
+                                color: Colors.white.withOpacity(0.5),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 16),
-                        Text(
-                          'Conectando...',
-                          style: GoogleFonts.sora(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 4,
-                            color: Colors.white.withOpacity(0.5),
-                          ),
-                        ),
-                      ],
-                    ),
               ),
               const SizedBox(height: 24),
               Text(
-                'Entra a la aplicación en tu celular (o visita https://argonapp2.netlify.app), ve a Ajustes > Control Remoto e ingresa este código.',
+                'Entra a la aplicación en tu celular (o visita https://www.argonapp.lat), ve a Ajustes > Control Remoto e ingresa este código.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   color: Colors.white.withOpacity(0.5),
                   height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'v1.4.3+14 (Vidaa Web Vercel)',
+                style: GoogleFonts.outfit(
+                  fontSize: 10,
+                  color: Colors.white.withOpacity(0.2),
                 ),
               ),
             ] else ...[
