@@ -25,16 +25,17 @@ class ApiClient {
     if (kIsWeb) {
       final hostname = Uri.base.host.toLowerCase();
       if (!hostname.contains('localhost') && !hostname.contains('127.0.0.1')) {
-        if (url.startsWith('https://vimeus.com/api/')) {
-          return url.replaceFirst('https://vimeus.com/api/', '/vimeus-api/');
-        } else if (url.startsWith('https://vimeus.com/e/')) {
+        final testUrl = url.replaceFirst('http://', 'https://');
+        if (testUrl.startsWith('https://vimeus.com/api/')) {
+          return url.replaceFirst(RegExp(r'https?://vimeus\.com/api/'), '/vimeus-api/');
+        } else if (testUrl.startsWith('https://vimeus.com/e/')) {
           return '/api/proxy?url=${Uri.encodeComponent(url)}';
-        } else if (url.startsWith('https://server.bixplay.online/')) {
-          return url.replaceFirst('https://server.bixplay.online/', '/bixplay-server/');
-        } else if (url.startsWith('https://appnew2.bixplay.online/rest-api/v100/')) {
-          return url.replaceFirst('https://appnew2.bixplay.online/rest-api/v100/', '/bixplay-api/');
-        } else if (url.startsWith('https://appnew2.bixplay.online/api/')) {
-          return url.replaceFirst('https://appnew2.bixplay.online/api/', '/bixplay-search/');
+        } else if (testUrl.startsWith('https://server.bixplay.online/')) {
+          return url.replaceFirst(RegExp(r'https?://server\.bixplay\.online/'), '/bixplay-server/');
+        } else if (testUrl.startsWith('https://appnew2.bixplay.online/rest-api/v100/')) {
+          return url.replaceFirst(RegExp(r'https?://appnew2\.bixplay\.online/rest-api/v100/'), '/bixplay-api/');
+        } else if (testUrl.startsWith('https://appnew2.bixplay.online/api/')) {
+          return url.replaceFirst(RegExp(r'https?://appnew2\.bixplay\.online/api/'), '/bixplay-search/');
         }
       } else {
         return 'https://api.allorigins.win/raw?url=' + Uri.encodeComponent(url);

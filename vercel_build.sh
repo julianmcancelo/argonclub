@@ -2,7 +2,7 @@
 # Script de compilacion para Vercel (Instala Flutter temporalmente y compila)
 
 echo "--- Iniciando instalacion de Flutter en Vercel ---"
-git clone https://github.com/flutter/flutter.git -b stable
+git clone https://github.com/flutter/flutter.git -b stable --depth 1
 export PATH="$PATH:`pwd`/flutter/bin"
 
 echo "--- Habilitando Flutter Web ---"

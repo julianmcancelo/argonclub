@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WatchPartySession {
@@ -109,6 +110,7 @@ class WatchPartyService {
   }
 
   Future<void> _warmupEndpointIfNeeded(String targetEndpoint) async {
+    if (kIsWeb) return;
     final uri = Uri.tryParse(targetEndpoint);
     if (uri == null) return;
     final host = uri.host.toLowerCase();
