@@ -198,17 +198,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   SeriesCategory _classifySeries(dynamic item) {
+    final genre = (item['genre'] ?? '').toString().toLowerCase();
+    
+    // 1. High-priority explicit genre checks
+    if (genre.contains('anime') || genre.contains('animac') || genre.contains('cartoon')) {
+      return SeriesCategory.anime;
+    }
+    if (genre.contains('telenovela') || genre.contains('soap') || genre.contains('novela')) {
+      return SeriesCategory.novelas;
+    }
+    if (genre.contains('documental') || genre.contains('documentary') || genre.contains('biograf')) {
+      return SeriesCategory.docus;
+    }
+    if (genre.contains('retro') || genre.contains('clasic') || genre.contains('clásic')) {
+      return SeriesCategory.retro;
+    }
+
+    // 2. Fallback to keyword matching on title and description
     final title = (item['title'] ?? item['tv_name'] ?? '').toString().toLowerCase();
     final desc = (item['description'] ?? '').toString().toLowerCase();
     
     final animeKeywords = [
       'anime', 'manga', 'animación', 'animacion', 'japon', 'japón', 'fate/zero', 'avatar',
-      'maestro', 'obsolete', 'caballero santo', 'gangsta', 'nodame', 'digimon', 'arjuna',
-      'barom', 'kabaneri', 'nube', 'oban', 'bluey', 'valle salvaje', 'dora', 'paw patrol',
+      'obsolete', 'caballero santo', 'gangsta', 'nodame', 'digimon', 'arjuna',
+      'barom', 'kabaneri', 'nube voladora', 'oban', 'bluey', 'valle salvaje', 'dora', 'paw patrol',
       'darkstalkers', 'pokemon', 'naruto', 'akane', 'súper once', 'super once', 'black lagoon',
       'violet evergarden', 'kenja', 'thundercats', 'momochi', 'gacha', 'noragami', 'akame',
       'tokyo revengers', 'code geass', 'link click', 'danmachi', 'stratos', 'voltron',
-      'sensou', 'dante', 'leyendas', 'rey inmortal', 'initial d', 'kotaro', 'órbita',
+      'sensou', 'rey inmortal', 'initial d', 'kotaro', 'órbita',
       'leveling', 'shippuden', 'one piece', 'shingeki', 'titan', 'demon slayer', 'kimetsu',
       'jujutsu', 'kaisen', 'my hero', 'academia', 'death note', 'evangelion', 'bleach',
       'black clover', 'chainsaw', 'baki', 'yugioh', 'bakugan', 'beyblade', 'saint seiya',

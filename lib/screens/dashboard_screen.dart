@@ -2382,15 +2382,18 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
 
     _dramaSeries = series.where((s) {
-      final genres = (s['genres'] as String? ?? '').toLowerCase();
-      return genres.contains('drama') || genres.contains('telenovela');
+      final genres = (s['genres'] as String? ?? s['genre'] as String? ?? '').toLowerCase();
+      return (genres.contains('drama') || genres.contains('telenovela')) &&
+          !genres.contains('anime') &&
+          !genres.contains('animac') &&
+          !genres.contains('cartoon');
     }).toList();
     if (_dramaSeries.isEmpty) {
       _dramaSeries = series.take(8).toList();
     }
 
     _animePicks = series.where((s) {
-      final genres = (s['genres'] as String? ?? '').toLowerCase();
+      final genres = (s['genres'] as String? ?? s['genre'] as String? ?? '').toLowerCase();
       return genres.contains('anime') ||
           genres.contains('animac') ||
           genres.contains('cartoon');
