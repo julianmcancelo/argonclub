@@ -3,6 +3,18 @@
   "outputDirectory": "public",
   "headers": [
     {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(index.html|main.dart.js|flutter_bootstrap.js|flutter_service_worker.js)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    },
+    {
       "source": "/bixplay-api/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
