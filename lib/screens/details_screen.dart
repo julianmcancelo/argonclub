@@ -21,13 +21,19 @@ class DetailsScreen extends StatefulWidget {
   final String type;
   final String id;
 
-  const DetailsScreen({Key? key, required this.itemData, required this.type, required this.id}) : super(key: key);
+  const DetailsScreen({
+    Key? key,
+    required this.itemData,
+    required this.type,
+    required this.id,
+  }) : super(key: key);
 
   @override
   _DetailsScreenState createState() => _DetailsScreenState();
 }
 
-class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateMixin {
+class _DetailsScreenState extends State<DetailsScreen>
+    with TickerProviderStateMixin {
   String _accentName = 'Mono';
   bool _atmosphere = false;
   late AnimationController _auroraController;
@@ -132,11 +138,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
   static const Color _fire = Color(0xFFF97316);
   bool _isLoading = true;
   dynamic _details;
-  
+
   // Servers list after background parsing
   List<Map<String, dynamic>> _resolvedServers = [];
   bool _isResolvingServers = false;
-  
+
   // For TV Series
   List<dynamic> _seasons = [];
   dynamic _selectedSeason;
@@ -163,9 +169,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       final details = await _apiClient.getSingleDetails(widget.type, widget.id);
       setState(() {
         _details = details;
-        
+
         // Parse seasons if TV Series
-        if (widget.type == 'tvseries' && _details['season'] != null && _details['season'] is List) {
+        if (widget.type == 'tvseries' &&
+            _details['season'] != null &&
+            _details['season'] is List) {
           _seasons = _details['season'];
           if (_seasons.isNotEmpty) {
             _selectedSeason = _seasons[0];
@@ -182,7 +190,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -219,7 +229,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
   }
 
   String? _getImdbId() {
-    final raw = _details?['imdb_id'] ?? _details?['imdb'] ?? widget.itemData['imdb_id'] ?? widget.itemData['imdb'];
+    final raw =
+        _details?['imdb_id'] ??
+        _details?['imdb'] ??
+        widget.itemData['imdb_id'] ??
+        widget.itemData['imdb'];
     if (raw == null) return null;
     final s = raw.toString().trim();
     if (s.isEmpty) return null;
@@ -241,7 +255,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         ApiClient.wrapUrl(url),
         options: Options(
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://vimeus.com/',
           },
           sendTimeout: const Duration(seconds: 15),
@@ -250,7 +265,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       );
 
       final html = response.data ?? '';
-      final dataRegex = RegExp(r'<script type="text\/json" id="data">([\s\S]*?)<\/script>');
+      final dataRegex = RegExp(
+        r'<script type="text\/json" id="data">([\s\S]*?)<\/script>',
+      );
       final match = dataRegex.firstMatch(html);
       if (match == null) return [];
 
@@ -264,15 +281,18 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         for (var embed in embeds) {
           if (embed is Map && embed['url'] != null) {
             final embedUrl = embed['url'].toString();
-            final serverName = (embed['server'] ?? 'Online').toString().toUpperCase();
+            final serverName = (embed['server'] ?? 'Online')
+                .toString()
+                .toUpperCase();
             final lang = (embed['lang'] ?? 'Latino').toString().toUpperCase();
             final quality = (embed['quality'] ?? 'HD').toString().toUpperCase();
-            
+
             out.add({
               'name': 'VIMEUS ($serverName - $lang $quality)',
               'url': embedUrl,
               'headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent':
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Referer': 'https://vimeus.com/',
               },
               'serverType': _classifyServerType(embedUrl, null),
@@ -289,28 +309,33 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         final rawUrl = m.group(0);
         if (rawUrl == null) continue;
         final clean = rawUrl.replaceAll(r'\/', '/').replaceAll('&amp;', '&');
-        if (clean.contains('.m3u8') || clean.contains('.mp4') || clean.contains('/playlist')) {
+        if (clean.contains('.m3u8') ||
+            clean.contains('.mp4') ||
+            clean.contains('/playlist')) {
           htmlUrls.add(clean);
         }
       }
       if (htmlUrls.isNotEmpty) {
         return htmlUrls
-            .map((u) => {
-                  'name': 'VIMEUS (AUTO)',
-                  'url': u,
-                  'headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Referer': 'https://vimeus.com/',
-                  },
-                  'serverType': _classifyServerType(u, null),
-                })
+            .map(
+              (u) => {
+                'name': 'VIMEUS (AUTO)',
+                'url': u,
+                'headers': {
+                  'User-Agent':
+                      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Referer': 'https://vimeus.com/',
+                },
+                'serverType': _classifyServerType(u, null),
+              },
+            )
             .toList();
       }
       return [];
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         return const [
-          {'is404': true}
+          {'is404': true},
         ];
       }
       return [];
@@ -354,7 +379,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         );
 
         final data = res.data;
-        final result = (data is Map && data['data'] is Map && data['data']['result'] is List)
+        final result =
+            (data is Map &&
+                data['data'] is Map &&
+                data['data']['result'] is List)
             ? (data['data']['result'] as List)
             : const <dynamic>[];
         if (result.isEmpty) continue;
@@ -370,7 +398,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         }
 
         Map? picked = exact;
-        if (picked == null && titleHint != null && titleHint.trim().isNotEmpty) {
+        if (picked == null &&
+            titleHint != null &&
+            titleHint.trim().isNotEmpty) {
           final t = titleHint.toLowerCase();
           for (final row in result) {
             if (row is! Map) continue;
@@ -417,7 +447,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         ),
       );
       final data = res.data;
-      final result = (data is Map && data['data'] is Map && data['data']['result'] is List)
+      final result =
+          (data is Map && data['data'] is Map && data['data']['result'] is List)
           ? (data['data']['result'] as List)
           : const <dynamic>[];
       if (result.isEmpty) return null;
@@ -477,27 +508,31 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         ApiClient.wrapUrl(url),
         options: Options(
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 9; G011A Build/PI) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/68.0.3440.70 Mobile Safari/537.36 buscari/53',
+            'User-Agent':
+                'Mozilla/5.0 (Linux; Android 9; G011A Build/PI) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/68.0.3440.70 Mobile Safari/537.36 buscari/53',
             'Referer': 'https://appnew2.bixplay.online/',
           },
           sendTimeout: const Duration(seconds: 8),
           receiveTimeout: const Duration(seconds: 8),
         ),
       );
-      
+
       final html = response.data ?? '';
       final out = <Map<String, dynamic>>[];
-      
+
       final linkRegex = RegExp(r'data-link="([^"]+)"', caseSensitive: false);
       final nameRegex = RegExp(r'data-name="([^"]+)"', caseSensitive: false);
-      
+
       // Match div elements that represent server cards
-      final divRegex = RegExp(r'<div\b[^>]*class="[^"]*server-card[^"]*"[^>]*>', caseSensitive: false);
+      final divRegex = RegExp(
+        r'<div\b[^>]*class="[^"]*server-card[^"]*"[^>]*>',
+        caseSensitive: false,
+      );
       for (final match in divRegex.allMatches(html)) {
         final tagHtml = match.group(0) ?? '';
         final linkMatch = linkRegex.firstMatch(tagHtml);
         final nameMatch = nameRegex.firstMatch(tagHtml);
-        
+
         if (linkMatch != null && nameMatch != null) {
           final link = linkMatch.group(1) ?? '';
           final name = nameMatch.group(1) ?? 'Servidor';
@@ -506,18 +541,22 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
               'name': '${name.toUpperCase()} (RÁPIDO)',
               'url': link,
               'headers': {
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent':
+                    'Mozilla/5.0 (Linux; Android 10; TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Referer': 'https://server.bixplay.online/',
                 'Origin': 'https://server.bixplay.online',
-              }
+              },
             });
           }
         }
       }
-      
+
       // Fallback matching
       if (out.isEmpty) {
-        final fallbackRegex = RegExp(r'data-link="([^"]+)"[^>]*data-name="([^"]+)"', caseSensitive: false);
+        final fallbackRegex = RegExp(
+          r'data-link="([^"]+)"[^>]*data-name="([^"]+)"',
+          caseSensitive: false,
+        );
         for (final match in fallbackRegex.allMatches(html)) {
           final link = match.group(1) ?? '';
           final name = match.group(2) ?? 'Servidor';
@@ -526,10 +565,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
               'name': '${name.toUpperCase()} (RÁPIDO)',
               'url': link,
               'headers': {
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent':
+                    'Mozilla/5.0 (Linux; Android 10; TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Referer': 'https://server.bixplay.online/',
                 'Origin': 'https://server.bixplay.online',
-              }
+              },
             });
           }
         }
@@ -550,11 +590,17 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     List<Map<String, dynamic>> rawServers = [];
     if (widget.type == 'live') {
       // Live TV: use stream_url directly with header enrichment
-      final url = _details?['stream_url']?.toString() ?? widget.itemData['stream_url']?.toString() ?? '';
+      final url =
+          _details?['stream_url']?.toString() ??
+          widget.itemData['stream_url']?.toString() ??
+          '';
       if (url.isNotEmpty) {
         final baseHeaders = _extractHeaders(_details ?? widget.itemData);
         final enrichedHeaders = _enrichHeaders(url, baseHeaders);
-        final serverType = _classifyServerType(url, _details?['type']?.toString() ?? _details?['videoType']?.toString());
+        final serverType = _classifyServerType(
+          url,
+          _details?['type']?.toString() ?? _details?['videoType']?.toString(),
+        );
         rawServers.add({
           'name': 'DIRECTO',
           'url': url,
@@ -565,12 +611,19 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       // Check if there are additional streams in 'videos' array for live channels
       if (_details?['videos'] != null && _details?['videos'] is List) {
         for (var vid in (_details?['videos'] as List)) {
-          final url = vid['file_url']?.toString() ?? vid['stream_url']?.toString() ?? '';
-          final label = vid['label']?.toString() ?? vid['name']?.toString() ?? 'CANAL';
+          final url =
+              vid['file_url']?.toString() ??
+              vid['stream_url']?.toString() ??
+              '';
+          final label =
+              vid['label']?.toString() ?? vid['name']?.toString() ?? 'CANAL';
           if (url.isNotEmpty) {
             final baseHeaders = _extractHeaders(vid);
             final enrichedHeaders = _enrichHeaders(url, baseHeaders);
-            final serverType = _classifyServerType(url, vid['videoType']?.toString() ?? vid['type']?.toString());
+            final serverType = _classifyServerType(
+              url,
+              vid['videoType']?.toString() ?? vid['type']?.toString(),
+            );
             rawServers.add({
               'name': label.toUpperCase(),
               'url': url,
@@ -587,7 +640,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         if (url.isNotEmpty) {
           final baseHeaders = _extractHeaders(vid);
           final enrichedHeaders = _enrichHeaders(url, baseHeaders);
-          final serverType = _classifyServerType(url, vid['videoType']?.toString() ?? vid['type']?.toString());
+          final serverType = _classifyServerType(
+            url,
+            vid['videoType']?.toString() ?? vid['type']?.toString(),
+          );
           rawServers.add({
             'name': label.toUpperCase(),
             'url': url,
@@ -601,7 +657,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     // Inject VIMEUS server using TMDB and IMDB ID
     String? tmdbId = _getTmdbId();
     final imdbId = _getImdbId();
-    final titleHint = (_details?['title'] ?? widget.itemData['title'])?.toString() ?? '';
+    final titleHint =
+        (_details?['title'] ?? widget.itemData['title'])?.toString() ?? '';
     if (tmdbId == null && imdbId != null) {
       tmdbId = await _lookupVimeusTmdbByImdb(
         imdbId: imdbId,
@@ -621,9 +678,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       if (tmdbId != null) {
         rawServers.add({
           'name': 'VIMEUS (TMDb)',
-          'url': 'https://vimeus.com/e/movie?tmdb=$tmdbId&view_key=${ApiClient.vimeusViewKey}',
+          'url':
+              'https://vimeus.com/e/movie?tmdb=$tmdbId&view_key=${ApiClient.vimeusViewKey}',
           'headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://vimeus.com/',
           },
           'serverType': 'embed',
@@ -632,9 +691,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       if (imdbId != null) {
         rawServers.add({
           'name': 'VIMEUS (IMDb)',
-          'url': 'https://vimeus.com/e/movie?imdb=$imdbId&view_key=${ApiClient.vimeusViewKey}',
+          'url':
+              'https://vimeus.com/e/movie?imdb=$imdbId&view_key=${ApiClient.vimeusViewKey}',
           'headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://vimeus.com/',
           },
           'serverType': 'embed',
@@ -644,7 +705,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
     // Decompress / Flatten Multiple Rápido portal server choices in background
     final finalizedRaw = await _resolveAndFinalizeServers(rawServers);
-    final finalized = await _applyRememberedPriority(finalizedRaw, _moviePlaybackKey());
+    final finalized = await _applyRememberedPriority(
+      finalizedRaw,
+      _moviePlaybackKey(),
+    );
 
     setState(() {
       _resolvedServers = finalized;
@@ -655,7 +719,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
   bool _isMultiplePortalServer(Map<String, dynamic> server) {
     final url = server['url']?.toString().toLowerCase() ?? '';
     final label = server['name']?.toString().toUpperCase() ?? '';
-    return url.contains('server.bixplay.online/server-nuevo-v2') || label.contains('MULTIPLE');
+    return url.contains('server.bixplay.online/server-nuevo-v2') ||
+        label.contains('MULTIPLE');
   }
 
   int _serverPriority(Map<String, dynamic> server) {
@@ -692,16 +757,18 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     String playbackKey,
   ) async {
     if (servers.isEmpty) return servers;
-    final rememberedUrl = await ServerMemory.getLastWorkingServerUrl(playbackKey);
+    final rememberedUrl = await ServerMemory.getLastWorkingServerUrl(
+      playbackKey,
+    );
     if (rememberedUrl == null || rememberedUrl.isEmpty) return servers;
-    final idx = servers.indexWhere((s) => (s['url']?.toString() ?? '').toLowerCase() == rememberedUrl.toLowerCase());
+    final idx = servers.indexWhere(
+      (s) =>
+          (s['url']?.toString() ?? '').toLowerCase() ==
+          rememberedUrl.toLowerCase(),
+    );
     if (idx <= 0) return servers;
 
-    return [
-      servers[idx],
-      ...servers.take(idx),
-      ...servers.skip(idx + 1),
-    ];
+    return [servers[idx], ...servers.take(idx), ...servers.skip(idx + 1)];
   }
 
   String _serverHealthTag(Map<String, dynamic> server) {
@@ -711,7 +778,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     return 'COMPATIBLE';
   }
 
-  List<Map<String, dynamic>> _dedupeServers(List<Map<String, dynamic>> servers) {
+  List<Map<String, dynamic>> _dedupeServers(
+    List<Map<String, dynamic>> servers,
+  ) {
     final seen = <String>{};
     final out = <Map<String, dynamic>>[];
     for (final raw in servers) {
@@ -726,7 +795,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     return out;
   }
 
-  Future<List<Map<String, dynamic>>> _resolveAndFinalizeServers(List<Map<String, dynamic>> rawServers) async {
+  Future<List<Map<String, dynamic>>> _resolveAndFinalizeServers(
+    List<Map<String, dynamic>> rawServers,
+  ) async {
     final expanded = <Map<String, dynamic>>[];
 
     for (final raw in rawServers) {
@@ -747,14 +818,16 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
           final fallbackUrl = _buildVimeusFallbackUrl(url);
           if (fallbackUrl != null && fallbackUrl != url) {
             final fallbackNested = await _resolveVimeus(fallbackUrl);
-            if (fallbackNested.isNotEmpty && fallbackNested.first['is404'] != true) {
+            if (fallbackNested.isNotEmpty &&
+                fallbackNested.first['is404'] != true) {
               expanded.addAll(fallbackNested.map(_normalizeServer));
               continue;
             }
             // Keep TMDb fallback candidate visible for runtime resolution.
             final fallbackCandidate = Map<String, dynamic>.from(normalized);
             fallbackCandidate['url'] = fallbackUrl;
-            final name = (fallbackCandidate['name']?.toString() ?? 'VIMEUS').toUpperCase();
+            final name = (fallbackCandidate['name']?.toString() ?? 'VIMEUS')
+                .toUpperCase();
             if (!name.contains('TMDB')) {
               fallbackCandidate['name'] = 'VIMEUS (TMDb)';
             }
@@ -778,8 +851,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
   // TV Series Episode server selector popup (shows premium server cards layout in a beautiful floating dialog)
   void _showServerDialog(
-    List<Map<String, dynamic>> servers, 
-    String episodeTitle, 
+    List<Map<String, dynamic>> servers,
+    String episodeTitle,
     bool isTV, {
     List<dynamic>? episodesList,
     int? currentEpisodeIndex,
@@ -790,7 +863,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.symmetric(horizontal: isTV ? 120 : 20, vertical: isTV ? 60 : 30),
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: isTV ? 120 : 20,
+            vertical: isTV ? 60 : 30,
+          ),
           child: Container(
             decoration: BoxDecoration(
               color: const Color(0xFF06060A),
@@ -801,7 +877,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                   color: Colors.black.withOpacity(0.85),
                   blurRadius: 30,
                   spreadRadius: 5,
-                )
+                ),
               ],
             ),
             padding: const EdgeInsets.all(24),
@@ -832,7 +908,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colorBrandA.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
@@ -840,7 +919,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                   ),
                   child: Text(
                     '${servers.length} opciones disponibles',
-                    style: const TextStyle(color: Color(0xFFC0A6FF), fontSize: 13, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Color(0xFFC0A6FF),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -858,16 +941,14 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                           onTap: () {
                             Navigator.pop(context);
                             _showPlaybackChoiceDialog(
-                              servers, 
+                              servers,
                               idx,
                               episodesList: episodesList,
                               currentEpisodeIndex: currentEpisodeIndex,
                               playbackKey: playbackKey,
                             );
                           },
-                          onLongPress: () async {
-                            final party = await _showWatchPartySetupDialog();
-                            if (party == null || !context.mounted) return;
+                          onLongPress: () {
                             Navigator.pop(context);
                             _playVideoFromServerList(
                               servers,
@@ -875,7 +956,6 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                               episodesList: episodesList,
                               currentEpisodeIndex: currentEpisodeIndex,
                               playbackKey: playbackKey,
-                              partySession: party,
                             );
                           },
                         );
@@ -915,14 +995,15 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
   }
 
   Future<void> _playVideoFromServerList(
-    List<Map<String, dynamic>> servers, 
+    List<Map<String, dynamic>> servers,
     int selectedIndex, {
     List<dynamic>? episodesList,
     int? currentEpisodeIndex,
     String playbackKey = '',
     WatchPartySession? partySession,
   }) async {
-    if (servers.isEmpty || selectedIndex < 0 || selectedIndex >= servers.length) return;
+    if (servers.isEmpty || selectedIndex < 0 || selectedIndex >= servers.length)
+      return;
 
     final selected = _normalizeServer(servers[selectedIndex]);
     if ((selected['url'] as String).isEmpty) return;
@@ -944,14 +1025,18 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     final url = first['url'] as String;
     final headers = first['headers'] as Map<String, String>;
     final isDirect = _isDirectStreamUrl(url);
-    final mediaTitle = widget.itemData['title'] ?? widget.itemData['tv_name'] ?? 'Contenido';
-    final posterUrl = (widget.itemData['tmdb_poster_url'] ??
-            widget.itemData['poster_url'] ??
-            widget.itemData['thumbnail_url'] ??
-            widget.itemData['image_url'] ??
-            '')
-        .toString();
-    final resumeSeconds = playbackKey.isNotEmpty ? await WatchHistoryService.getResumeSeconds(playbackKey) : null;
+    final mediaTitle =
+        widget.itemData['title'] ?? widget.itemData['tv_name'] ?? 'Contenido';
+    final posterUrl =
+        (widget.itemData['tmdb_poster_url'] ??
+                widget.itemData['poster_url'] ??
+                widget.itemData['thumbnail_url'] ??
+                widget.itemData['image_url'] ??
+                '')
+            .toString();
+    final resumeSeconds = playbackKey.isNotEmpty
+        ? await WatchHistoryService.getResumeSeconds(playbackKey)
+        : null;
 
     Navigator.push(
       context,
@@ -982,91 +1067,12 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     int? currentEpisodeIndex,
     String playbackKey = '',
   }) async {
-    final choice = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: _surface,
-        title: const Text('Como queres continuar?', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Podes reproducir ahora o entrar a Ver en grupo antes de iniciar.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'play'),
-            child: const Text('Reproducir'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, 'party'),
-            child: const Text('Ver en grupo'),
-          ),
-        ],
-      ),
-    );
-
-    if (choice == null) return;
-    if (choice == 'play') {
-      await _playVideoFromServerList(
-        servers,
-        selectedIndex,
-        episodesList: episodesList,
-        currentEpisodeIndex: currentEpisodeIndex,
-        playbackKey: playbackKey,
-      );
-      return;
-    }
-
-    final party = await _showWatchPartySetupDialog();
-    if (party == null) return;
-    final selected = _normalizeServer(servers[selectedIndex]);
-    if ((selected['url'] as String).isEmpty) return;
-
-    final prioritized = <Map<String, dynamic>>[selected];
-    for (int i = 0; i < servers.length; i++) {
-      if (i == selectedIndex) continue;
-      final normalized = _normalizeServer(servers[i]);
-      if ((normalized['url'] as String).isNotEmpty) {
-        prioritized.add(normalized);
-      }
-    }
-
-    final finalQueue = playbackKey.isNotEmpty
-        ? await _applyRememberedPriority(prioritized, playbackKey)
-        : prioritized;
-
-    final first = finalQueue.first;
-    final url = first['url'] as String;
-    final headers = first['headers'] as Map<String, String>;
-    final isDirect = _isDirectStreamUrl(url);
-    final mediaTitle = widget.itemData['title'] ?? widget.itemData['tv_name'] ?? 'Contenido';
-    final posterUrl = (widget.itemData['tmdb_poster_url'] ??
-            widget.itemData['poster_url'] ??
-            widget.itemData['thumbnail_url'] ??
-            widget.itemData['image_url'] ??
-            '')
-        .toString();
-    final resumeSeconds = playbackKey.isNotEmpty ? await WatchHistoryService.getResumeSeconds(playbackKey) : null;
-
-    if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WatchPartyLobbyScreen(
-          session: party,
-          videoUrl: url,
-          isDirect: isDirect,
-          headers: headers,
-          serverQueue: finalQueue,
-          episodesList: episodesList,
-          currentEpisodeIndex: currentEpisodeIndex,
-          mediaTitle: mediaTitle,
-          mediaType: widget.type,
-          mediaId: widget.id,
-          mediaPosterUrl: posterUrl,
-          playbackKey: playbackKey,
-          startPositionSeconds: resumeSeconds ?? 0,
-        ),
-      ),
+    await _playVideoFromServerList(
+      servers,
+      selectedIndex,
+      episodesList: episodesList,
+      currentEpisodeIndex: currentEpisodeIndex,
+      playbackKey: playbackKey,
     );
   }
 
@@ -1101,7 +1107,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: _surface,
-              title: const Text('Ver en grupo', style: TextStyle(color: Colors.white, fontSize: 20)),
+              title: const Text(
+                'Ver en grupo',
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
               content: SizedBox(
                 width: 460,
                 child: Column(
@@ -1122,11 +1131,15 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                                 info = '';
                               }),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   border: Border(
                                     bottom: BorderSide(
-                                      color: createMode ? Colors.white : Colors.white24,
+                                      color: createMode
+                                          ? Colors.white
+                                          : Colors.white24,
                                       width: createMode ? 3 : 1,
                                     ),
                                   ),
@@ -1135,7 +1148,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                                   'Crear sala',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: createMode ? Colors.white : Colors.white60,
+                                    color: createMode
+                                        ? Colors.white
+                                        : Colors.white60,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -1153,11 +1168,15 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                                 info = '';
                               }),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   border: Border(
                                     bottom: BorderSide(
-                                      color: !createMode ? Colors.white : Colors.white24,
+                                      color: !createMode
+                                          ? Colors.white
+                                          : Colors.white24,
                                       width: !createMode ? 3 : 1,
                                     ),
                                   ),
@@ -1166,7 +1185,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                                   'Unirse',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: !createMode ? Colors.white : Colors.white60,
+                                    color: !createMode
+                                        ? Colors.white
+                                        : Colors.white60,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -1180,7 +1201,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
                     Text(
                       'Nombre configurado: $displayName',
-                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -1193,7 +1217,12 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                       const SizedBox(height: 8),
                       SelectableText(
                         generatedRoom,
-                        style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: 4),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 4,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       const Text(
@@ -1203,7 +1232,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                     ] else
                       TextField(
                         controller: roomController,
-                        style: const TextStyle(color: Colors.white, fontSize: 16, letterSpacing: 2),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          letterSpacing: 2,
+                        ),
                         textCapitalization: TextCapitalization.characters,
                         maxLength: 6,
                         decoration: InputDecoration(
@@ -1227,7 +1260,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                         child: Text(
                           info,
                           style: TextStyle(
-                            color: info.contains('Error') || info.contains('invalido')
+                            color:
+                                info.contains('Error') ||
+                                    info.contains('invalido')
                                 ? Colors.redAccent
                                 : Colors.white70,
                             fontSize: 12,
@@ -1240,12 +1275,18 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar', style: TextStyle(color: Colors.white60)),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: Colors.white60),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 12,
+                    ),
                   ),
                   onPressed: () async {
                     final room = createMode
@@ -1261,7 +1302,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
                     if (createMode) {
                       await Clipboard.setData(
-                        ClipboardData(text: 'Mira conmigo en Zuper. Sala: $room'),
+                        ClipboardData(
+                          text: 'Mira conmigo en Zuper. Sala: $room',
+                        ),
                       );
                       setDialogState(() {
                         info = 'Codigo copiado al portapapeles';
@@ -1282,7 +1325,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                   },
                   child: Text(
                     createMode ? 'Crear' : 'Unirse',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -1360,7 +1406,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       headers.putIfAbsent('Referer', () => url);
       headers.putIfAbsent(
         'User-Agent',
-        () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        () =>
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       );
     }
 
@@ -1374,7 +1421,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       headers.putIfAbsent('Referer', () => url);
       headers.putIfAbsent(
         'User-Agent',
-        () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        () =>
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       );
     }
 
@@ -1391,7 +1439,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     // Default fallback User-Agent if none set
     headers.putIfAbsent(
       'User-Agent',
-      () => 'Mozilla/5.0 (Linux; Android 10; TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      () =>
+          'Mozilla/5.0 (Linux; Android 10; TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     );
 
     return headers;
@@ -1427,7 +1476,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                   const SizedBox(height: 16),
                   Text(
                     message,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -1440,7 +1493,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
   void _handlePlayEpisode(dynamic episode) async {
     final isTV = _isTV(context);
-    final episodes = _selectedSeason != null && _selectedSeason['episodes'] != null
+    final episodes =
+        _selectedSeason != null && _selectedSeason['episodes'] != null
         ? (_selectedSeason['episodes'] as List)
         : <dynamic>[];
     final episodeIndex = episodes.indexOf(episode);
@@ -1448,13 +1502,16 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
     // Resolving episode servers
     List<Map<String, dynamic>> servers = [];
-    
+
     final directUrl = episode['file_url']?.toString() ?? '';
     final directLabel = episode['label']?.toString() ?? 'SERVIDOR 1';
     if (directUrl.isNotEmpty) {
       final baseHeaders = _extractHeaders(episode);
       final enrichedHeaders = _enrichHeaders(directUrl, baseHeaders);
-      final serverType = _classifyServerType(directUrl, episode['videoType']?.toString() ?? episode['type']?.toString());
+      final serverType = _classifyServerType(
+        directUrl,
+        episode['videoType']?.toString() ?? episode['type']?.toString(),
+      );
       servers.add({
         'name': directLabel.toUpperCase(),
         'url': directUrl,
@@ -1462,7 +1519,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         'serverType': serverType,
       });
     }
-    
+
     if (episode['videos'] != null && episode['videos'] is List) {
       for (var vid in episode['videos']) {
         final url = vid['file_url']?.toString() ?? '';
@@ -1470,7 +1527,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         if (url.isNotEmpty) {
           final baseHeaders = _extractHeaders(vid);
           final enrichedHeaders = _enrichHeaders(url, baseHeaders);
-          final serverType = _classifyServerType(url, vid['videoType']?.toString() ?? vid['type']?.toString());
+          final serverType = _classifyServerType(
+            url,
+            vid['videoType']?.toString() ?? vid['type']?.toString(),
+          );
           servers.add({
             'name': label.toUpperCase(),
             'url': url,
@@ -1482,12 +1542,19 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     }
 
     // Inject VIMEUS server using TMDB and IMDB ID
-    final isAnime = widget.itemData['genre']?.toString().toLowerCase().contains('anime') == true ||
+    final isAnime =
+        widget.itemData['genre']?.toString().toLowerCase().contains('anime') ==
+            true ||
         _details?['genre']?.toString().toLowerCase().contains('anime') == true;
 
     String? tmdbId = _getTmdbId();
     final imdbId = _getImdbId();
-    final titleHint = (_details?['title'] ?? widget.itemData['tv_name'] ?? widget.itemData['title'])?.toString() ?? '';
+    final titleHint =
+        (_details?['title'] ??
+                widget.itemData['tv_name'] ??
+                widget.itemData['title'])
+            ?.toString() ??
+        '';
     if (tmdbId == null && imdbId != null) {
       tmdbId = await _lookupVimeusTmdbByImdb(
         imdbId: imdbId,
@@ -1507,7 +1574,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       // Parse season and episode number
       int seasonNum = 1;
       if (_selectedSeason != null) {
-        final rawSe = _selectedSeason['season_number'] ?? _selectedSeason['season'];
+        final rawSe =
+            _selectedSeason['season_number'] ?? _selectedSeason['season'];
         if (rawSe != null) {
           seasonNum = int.tryParse(rawSe.toString()) ?? 1;
         } else {
@@ -1542,9 +1610,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       if (tmdbId != null) {
         servers.add({
           'name': 'VIMEUS (TMDb)',
-          'url': 'https://vimeus.com/e/$endpoint?tmdb=$tmdbId&se=$seasonNum&ep=$episodeNum&view_key=${ApiClient.vimeusViewKey}',
+          'url':
+              'https://vimeus.com/e/$endpoint?tmdb=$tmdbId&se=$seasonNum&ep=$episodeNum&view_key=${ApiClient.vimeusViewKey}',
           'headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://vimeus.com/',
           },
           'serverType': 'embed',
@@ -1553,9 +1623,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       if (imdbId != null) {
         servers.add({
           'name': 'VIMEUS (IMDb)',
-          'url': 'https://vimeus.com/e/$endpoint?imdb=$imdbId&se=$seasonNum&ep=$episodeNum&view_key=${ApiClient.vimeusViewKey}',
+          'url':
+              'https://vimeus.com/e/$endpoint?imdb=$imdbId&se=$seasonNum&ep=$episodeNum&view_key=${ApiClient.vimeusViewKey}',
           'headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://vimeus.com/',
           },
           'serverType': 'embed',
@@ -1568,7 +1640,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
     try {
       final finalizedRaw = await _resolveAndFinalizeServers(servers);
-      final finalized = await _applyRememberedPriority(finalizedRaw, playbackKey);
+      final finalized = await _applyRememberedPriority(
+        finalizedRaw,
+        playbackKey,
+      );
       if (!mounted) return;
 
       // Close the loading dialog
@@ -1576,14 +1651,16 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
       if (finalized.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se encontraron servidores para este episodio.')),
+          const SnackBar(
+            content: Text('No se encontraron servidores para este episodio.'),
+          ),
         );
         return;
       }
 
       if (finalized.length == 1) {
         _showPlaybackChoiceDialog(
-          finalized, 
+          finalized,
           0,
           episodesList: episodes,
           currentEpisodeIndex: episodeIndex,
@@ -1593,8 +1670,8 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       }
 
       _showServerDialog(
-        finalized, 
-        episode['episodes_name'] ?? 'Selecciona Servidor', 
+        finalized,
+        episode['episodes_name'] ?? 'Selecciona Servidor',
         isTV,
         episodesList: episodes,
         currentEpisodeIndex: episodeIndex,
@@ -1603,9 +1680,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al resolver: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al resolver: $e')));
       }
     }
   }
@@ -1620,15 +1697,37 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     final isTV = _isTV(context);
     final width = MediaQuery.of(context).size.width;
     final tvScale = isTV ? (width / 1920).clamp(0.82, 1.18) : 1.0;
-    final title = widget.itemData['title'] ?? widget.itemData['tv_name'] ?? widget.itemData['channel_name'] ?? 'Detalles';
-    final posterUrl = widget.itemData['poster_url'] ?? widget.itemData['image_url'] ?? widget.itemData['thumbnail_url'] ?? widget.itemData['logo'] ?? '';
-    final description = _details != null ? (_details['description'] ?? widget.itemData['description'] ?? 'Sin descripción.') : 'Cargando...';
-    
+    final title =
+        widget.itemData['title'] ??
+        widget.itemData['tv_name'] ??
+        widget.itemData['channel_name'] ??
+        'Detalles';
+    final posterUrl =
+        widget.itemData['poster_url'] ??
+        widget.itemData['image_url'] ??
+        widget.itemData['thumbnail_url'] ??
+        widget.itemData['logo'] ??
+        '';
+    final description = _details != null
+        ? (_details['description'] ??
+              widget.itemData['description'] ??
+              'Sin descripción.')
+        : 'Cargando...';
+
     // Extracted Metadatas
-    final rating = _details?['imdb_rating']?.toString() ?? widget.itemData['imdb_rating']?.toString() ?? '8.0';
-    final release = _details?['release']?.toString() ?? widget.itemData['release']?.toString() ?? '2024';
-    final runtime = _details?['runtime']?.toString() ?? widget.itemData['runtime']?.toString() ?? '120 min';
-    
+    final rating =
+        _details?['imdb_rating']?.toString() ??
+        widget.itemData['imdb_rating']?.toString() ??
+        '8.0';
+    final release =
+        _details?['release']?.toString() ??
+        widget.itemData['release']?.toString() ??
+        '2024';
+    final runtime =
+        _details?['runtime']?.toString() ??
+        widget.itemData['runtime']?.toString() ??
+        '120 min';
+
     List<String> genres = [];
     if (_details != null && _details['genre'] is List) {
       for (var g in _details['genre']) {
@@ -1667,7 +1766,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
               ),
             ),
           ],
-          
+
           // Gradient fade on top of blurred poster
           Container(
             decoration: const BoxDecoration(
@@ -1679,7 +1778,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
               ),
             ),
           ),
-          
+
           // Main layout content
           SafeArea(
             child: Column(
@@ -1687,11 +1786,17 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
               children: [
                 // Top Header Row
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: isTV ? 20.0 * tvScale : 16.0, vertical: isTV ? 10.0 * tvScale : 8.0),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTV ? 20.0 * tvScale : 16.0,
+                    vertical: isTV ? 10.0 * tvScale : 8.0,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: _ink,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       const SizedBox(width: 8),
@@ -1706,16 +1811,37 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                     ],
                   ),
                 ),
-                
+
                 // Body Contents
                 Expanded(
                   child: _isLoading
-                      ? Center(child: CircularProgressIndicator(color: colorBrandA))
+                      ? Center(
+                          child: CircularProgressIndicator(color: colorBrandA),
+                        )
                       : SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(horizontal: isTV ? 24.0 * tvScale : 16.0, vertical: isTV ? 14.0 * tvScale : 16.0),
-                          child: isTV 
-                              ? _buildLandscapeTVLayout(title, posterUrl, rating, release, runtime, genres, description)
-                              : _buildPortraitMobileLayout(title, posterUrl, rating, release, runtime, genres, description),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isTV ? 24.0 * tvScale : 16.0,
+                            vertical: isTV ? 14.0 * tvScale : 16.0,
+                          ),
+                          child: isTV
+                              ? _buildLandscapeTVLayout(
+                                  title,
+                                  posterUrl,
+                                  rating,
+                                  release,
+                                  runtime,
+                                  genres,
+                                  description,
+                                )
+                              : _buildPortraitMobileLayout(
+                                  title,
+                                  posterUrl,
+                                  rating,
+                                  release,
+                                  runtime,
+                                  genres,
+                                  description,
+                                ),
                         ),
                 ),
               ],
@@ -1728,15 +1854,17 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
   // --- TV LANDSCAPE LAYOUT ---
   Widget _buildLandscapeTVLayout(
-    String title, 
-    String posterUrl, 
-    String rating, 
-    String release, 
-    String runtime, 
-    List<String> genres, 
-    String description
+    String title,
+    String posterUrl,
+    String rating,
+    String release,
+    String runtime,
+    List<String> genres,
+    String description,
   ) {
-    final tvScale = _isTV(context) ? (MediaQuery.of(context).size.width / 1920).clamp(0.82, 1.18) : 1.0;
+    final tvScale = _isTV(context)
+        ? (MediaQuery.of(context).size.width / 1920).clamp(0.82, 1.18)
+        : 1.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1746,11 +1874,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                _surface,
-                _surfaceSoft,
-                Colors.black.withOpacity(0.16),
-              ],
+              colors: [_surface, _surfaceSoft, Colors.black.withOpacity(0.16)],
             ),
             borderRadius: BorderRadius.circular(26),
             border: Border.all(color: _lineStrong),
@@ -1772,9 +1896,14 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10 * tvScale, vertical: 5 * tvScale),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10 * tvScale,
+                        vertical: 5 * tvScale,
+                      ),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [_crimson, _fire]),
+                        gradient: const LinearGradient(
+                          colors: [_crimson, _fire],
+                        ),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -1805,7 +1934,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                         _buildMetaCapsule('★ $rating'),
                         _buildMetaCapsule(release),
                         _buildMetaCapsule(runtime),
-                        ...genres.take(3).map((g) => _buildMetaCapsule(g)).toList(),
+                        ...genres
+                            .take(3)
+                            .map((g) => _buildMetaCapsule(g))
+                            .toList(),
                       ],
                     ),
                     SizedBox(height: 16 * tvScale),
@@ -1827,12 +1959,12 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         SizedBox(height: 24 * tvScale),
         Divider(color: _lineStrong, thickness: 1.2),
         SizedBox(height: 18 * tvScale),
-        
+
         // Bottom details section: Servers / Episodes grid
         if (widget.type == 'tvseries') ...[
-          _buildTVSeriesSection(true)
+          _buildTVSeriesSection(true),
         ] else ...[
-          _buildMovieServersSection(true)
+          _buildMovieServersSection(true),
         ],
       ],
     );
@@ -1840,13 +1972,13 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
   // --- MOBILE PORTRAIT LAYOUT ---
   Widget _buildPortraitMobileLayout(
-    String title, 
-    String posterUrl, 
-    String rating, 
-    String release, 
-    String runtime, 
-    List<String> genres, 
-    String description
+    String title,
+    String posterUrl,
+    String rating,
+    String release,
+    String runtime,
+    List<String> genres,
+    String description,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1854,7 +1986,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         // Main Details stacked vertically
         Center(child: _buildPosterWithRating(posterUrl, rating, false)),
         const SizedBox(height: 24),
-        
+
         Text(
           title,
           style: GoogleFonts.plusJakartaSans(
@@ -1865,7 +1997,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        
+
         // Metadata Pills
         Center(
           child: Wrap(
@@ -1880,7 +2012,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
           ),
         ),
         const SizedBox(height: 24),
-        
+
         Text(
           description,
           style: GoogleFonts.plusJakartaSans(
@@ -1892,12 +2024,12 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
         const SizedBox(height: 32),
         const Divider(color: Color(0xFF1F1F30), thickness: 1.5),
         const SizedBox(height: 20),
-        
+
         // Bottom details section
         if (widget.type == 'tvseries') ...[
-          _buildTVSeriesSection(false)
+          _buildTVSeriesSection(false),
         ] else ...[
-          _buildMovieServersSection(false)
+          _buildMovieServersSection(false),
         ],
       ],
     );
@@ -1905,7 +2037,9 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
 
   // Poster Image Widget with imdb star pill overlayed
   Widget _buildPosterWithRating(String posterUrl, String rating, bool isTV) {
-    final tvScale = isTV ? (MediaQuery.of(context).size.width / 1920).clamp(0.82, 1.18) : 1.0;
+    final tvScale = isTV
+        ? (MediaQuery.of(context).size.width / 1920).clamp(0.82, 1.18)
+        : 1.0;
     final posterWidth = isTV ? 180.0 * tvScale : 130.0;
     final posterHeight = isTV ? 270.0 * tvScale : 190.0;
     return Stack(
@@ -1919,7 +2053,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                 blurRadius: 15,
                 spreadRadius: 2,
                 offset: const Offset(0, 5),
-              )
+              ),
             ],
           ),
           child: ClipRRect(
@@ -1935,14 +2069,22 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                       width: posterWidth,
                       height: posterHeight,
                       color: Colors.grey[900],
-                      child: const Icon(Icons.movie, color: Colors.white24, size: 50),
+                      child: const Icon(
+                        Icons.movie,
+                        color: Colors.white24,
+                        size: 50,
+                      ),
                     ),
                   )
                 : Container(
                     width: posterWidth,
                     height: posterHeight,
                     color: Colors.grey[900],
-                    child: const Icon(Icons.movie, color: Colors.white24, size: 50),
+                    child: const Icon(
+                      Icons.movie,
+                      color: Colors.white24,
+                      size: 50,
+                    ),
                   ),
           ),
         ),
@@ -1959,7 +2101,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.star_rounded, color: Color(0xFFFFC107), size: 16),
+                const Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFFFFC107),
+                  size: 16,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   rating,
@@ -2000,7 +2146,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
   // --- MOVIE SERVERS BOTTOM SECTION ---
   Widget _buildMovieServersSection(bool isTV) {
     final serverCount = _resolvedServers.length;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2018,7 +2164,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
             ),
             if (!_isResolvingServers)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(999),
@@ -2036,7 +2185,7 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
           ],
         ),
         const SizedBox(height: 20),
-        
+
         // Display Server Skeletons / Grid list
         if (_isResolvingServers) ...[
           if (isTV)
@@ -2059,10 +2208,13 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
             child: Center(
               child: Text(
                 'No hay servidores disponibles!',
-                style: GoogleFonts.plusJakartaSans(color: Colors.white54, fontSize: 16),
+                style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white54,
+                  fontSize: 16,
+                ),
               ),
             ),
-          )
+          ),
         ] else ...[
           // Grid/List of real servers
           isTV
@@ -2087,16 +2239,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                         index,
                         playbackKey: _moviePlaybackKey(),
                       ),
-                      onLongPress: () async {
-                        final party = await _showWatchPartySetupDialog();
-                        if (party == null) return;
-                        _playVideoFromServerList(
-                          _resolvedServers,
-                          index,
-                          playbackKey: _moviePlaybackKey(),
-                          partySession: party,
-                        );
-                      },
+                      onLongPress: () => _playVideoFromServerList(
+                        _resolvedServers,
+                        index,
+                        playbackKey: _moviePlaybackKey(),
+                      ),
                     );
                   },
                 )
@@ -2115,16 +2262,11 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                         index,
                         playbackKey: _moviePlaybackKey(),
                       ),
-                      onLongPress: () async {
-                        final party = await _showWatchPartySetupDialog();
-                        if (party == null) return;
-                        _playVideoFromServerList(
-                          _resolvedServers,
-                          index,
-                          playbackKey: _moviePlaybackKey(),
-                          partySession: party,
-                        );
-                      },
+                      onLongPress: () => _playVideoFromServerList(
+                        _resolvedServers,
+                        index,
+                        playbackKey: _moviePlaybackKey(),
+                      ),
                     );
                   },
                 ),
@@ -2161,13 +2303,20 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
                   child: DropdownButton<dynamic>(
                     value: _selectedSeason,
                     dropdownColor: const Color(0xFF0F0F18),
-                    icon: Icon(Icons.arrow_drop_down_rounded, color: colorBrandA),
-                    style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                    icon: Icon(
+                      Icons.arrow_drop_down_rounded,
+                      color: colorBrandA,
+                    ),
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
                     onChanged: (v) => setState(() => _selectedSeason = v),
                     items: _seasons.map<DropdownMenuItem<dynamic>>((s) {
                       return DropdownMenuItem<dynamic>(
-                        value: s, 
-                        child: Text(s['seasons_name'] ?? 'Temporada')
+                        value: s,
+                        child: Text(s['seasons_name'] ?? 'Temporada'),
                       );
                     }).toList(),
                   ),
@@ -2176,11 +2325,12 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
           ],
         ),
         const SizedBox(height: 24),
-        
+
         // Skeletons
         if (_isResolvingServers) ...[
           Center(child: CircularProgressIndicator(color: colorBrandA)),
-        ] else if (_selectedSeason != null && _selectedSeason['episodes'] != null) ...[
+        ] else if (_selectedSeason != null &&
+            _selectedSeason['episodes'] != null) ...[
           Text(
             'EPISODIOS',
             style: GoogleFonts.plusJakartaSans(
@@ -2196,7 +2346,10 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
             return _buildEpisodeCard(episode, isTV);
           }).toList(),
         ] else ...[
-          const Text('No hay episodios disponibles.', style: TextStyle(color: Colors.white54)),
+          const Text(
+            'No hay episodios disponibles.',
+            style: TextStyle(color: Colors.white54),
+          ),
         ],
       ],
     );
@@ -2211,9 +2364,12 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
     VoidCallback? onLongPress,
   }) {
     final serverName = server['name'] as String? ?? 'SERVIDOR';
-    final isTop = serverName.contains('TOP') || serverName.contains('RÁPIDO') || index == 0;
+    final isTop =
+        serverName.contains('TOP') ||
+        serverName.contains('RÁPIDO') ||
+        index == 0;
     final healthTag = _serverHealthTag(server);
-    
+
     return TvFocusableItem(
       autofocus: index == 0,
       onPressed: onTap,
@@ -2233,140 +2389,145 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
             ),
           ),
           child: Row(
-                children: [
-                  // Index Circle Badge
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: _crimson.withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: GoogleFonts.dmSans(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  
-                  // Server Title and Status Details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                serverName,
-                                style: GoogleFonts.dmSans(
-                                  color: _ink,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (isTop) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(colors: [_crimson, _fire]),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  'TOP',
-                                  style: GoogleFonts.dmSans(
-                                    color: Colors.white,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.7,
-                                  ),
-                                ),
-                              ),
-                            ],
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.06),
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(
-                                  color: _lineStrong,
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Text(
-                                healthTag,
-                                style: GoogleFonts.dmSans(
-                                  color: _inkMuted,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: Colors.greenAccent,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Online',
-                              style: GoogleFonts.dmSans(
-                                color: _muted,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Purple Play Button Icon
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [_crimson, _fire]),
-                      borderRadius: BorderRadius.circular(13),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _crimson.withOpacity(0.34),
-                          blurRadius: 12,
-                          offset: const Offset(0, 2),
-                        )
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
+            children: [
+              // Index Circle Badge
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: _crimson.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: GoogleFonts.dmSans(
                       color: Colors.white,
-                      size: 28,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 16),
+
+              // Server Title and Status Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            serverName,
+                            style: GoogleFonts.dmSans(
+                              color: _ink,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isTop) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [_crimson, _fire],
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              'TOP',
+                              style: GoogleFonts.dmSans(
+                                color: Colors.white,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.7,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: _lineStrong, width: 0.8),
+                          ),
+                          child: Text(
+                            healthTag,
+                            style: GoogleFonts.dmSans(
+                              color: _inkMuted,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Colors.greenAccent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Online',
+                          style: GoogleFonts.dmSans(
+                            color: _muted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Purple Play Button Icon
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [_crimson, _fire]),
+                  borderRadius: BorderRadius.circular(13),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _crimson.withOpacity(0.34),
+                      blurRadius: 12,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ],
           ),
-        );
+        ),
+      ),
+    );
   }
 
   // Skeleton Loader for resolved servers loading state
@@ -2384,23 +2545,43 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
           Container(
             width: 38,
             height: 38,
-            decoration: const BoxDecoration(color: Color(0xFF1F1F30), shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1F1F30),
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(width: 120, height: 16, decoration: BoxDecoration(color: _line, borderRadius: BorderRadius.circular(4))),
+                Container(
+                  width: 120,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: _line,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Container(width: 60, height: 12, decoration: BoxDecoration(color: _line, borderRadius: BorderRadius.circular(4))),
+                Container(
+                  width: 60,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: _line,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(color: _line, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: _line,
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ],
       ),
@@ -2420,61 +2601,63 @@ class _DetailsScreenState extends State<DetailsScreen> with TickerProviderStateM
       borderRadius: BorderRadius.circular(16),
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF0F0F18),
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF0F0F18)),
         child: ListTile(
-                contentPadding: EdgeInsets.all(isTV ? 12 : 8),
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: epImage.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: epImage, 
-                          width: isTV ? 140 : 90, 
-                          height: isTV ? 80 : 54, 
-                          fit: BoxFit.cover, 
-                          memCacheWidth: ((isTV ? 140 : 90) * MediaQuery.of(context).devicePixelRatio).round(),
-                          memCacheHeight: ((isTV ? 80 : 54) * MediaQuery.of(context).devicePixelRatio).round(),
-                          errorWidget: (c, u, e) => const Icon(Icons.error)
-                        )
-                      : Container(
-                          width: isTV ? 140 : 90, 
-                          height: isTV ? 80 : 54, 
-                          color: Colors.grey[800], 
-                          child: const Icon(Icons.tv, color: Colors.white54)
-                        ),
-                ),
-                title: Text(
-                  epTitle, 
-                  style: GoogleFonts.plusJakartaSans(
-                    color: Colors.white, 
-                    fontWeight: FontWeight.bold, 
-                    fontSize: isTV ? 17 : 14
+          contentPadding: EdgeInsets.all(isTV ? 12 : 8),
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: epImage.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: epImage,
+                    width: isTV ? 140 : 90,
+                    height: isTV ? 80 : 54,
+                    fit: BoxFit.cover,
+                    memCacheWidth:
+                        ((isTV ? 140 : 90) *
+                                MediaQuery.of(context).devicePixelRatio)
+                            .round(),
+                    memCacheHeight:
+                        ((isTV ? 80 : 54) *
+                                MediaQuery.of(context).devicePixelRatio)
+                            .round(),
+                    errorWidget: (c, u, e) => const Icon(Icons.error),
                   )
-                ),
-                subtitle: epDesc.isNotEmpty 
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          epDesc, 
-                          style: GoogleFonts.plusJakartaSans(
-                            color: Colors.white54, 
-                            fontSize: isTV ? 14 : 12
-                          ), 
-                          maxLines: 2, 
-                          overflow: TextOverflow.ellipsis
-                        ),
-                      ) 
-                    : null,
-                trailing: Icon(
-                  Icons.play_circle_fill, 
-                  color: Colors.white54, 
-                  size: isTV ? 36 : 28
-                ),
-              ),
+                : Container(
+                    width: isTV ? 140 : 90,
+                    height: isTV ? 80 : 54,
+                    color: Colors.grey[800],
+                    child: const Icon(Icons.tv, color: Colors.white54),
+                  ),
+          ),
+          title: Text(
+            epTitle,
+            style: GoogleFonts.plusJakartaSans(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: isTV ? 17 : 14,
             ),
-        );
+          ),
+          subtitle: epDesc.isNotEmpty
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    epDesc,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.white54,
+                      fontSize: isTV ? 14 : 12,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              : null,
+          trailing: Icon(
+            Icons.play_circle_fill,
+            color: Colors.white54,
+            size: isTV ? 36 : 28,
+          ),
+        ),
+      ),
+    );
   }
 }
-
-
