@@ -185,6 +185,22 @@ class RemoteControlService {
         logicalKey = LogicalKeyboardKey.backspace;
         physicalKey = PhysicalKeyboardKey.backspace;
         break;
+      case 'Escape':
+        logicalKey = LogicalKeyboardKey.escape;
+        physicalKey = PhysicalKeyboardKey.escape;
+        break;
+      case 'MediaPlayPause':
+        logicalKey = LogicalKeyboardKey.mediaPlayPause;
+        physicalKey = PhysicalKeyboardKey.mediaPlayPause;
+        break;
+      case 'MediaRewind':
+        logicalKey = LogicalKeyboardKey.mediaRewind;
+        physicalKey = PhysicalKeyboardKey.mediaRewind;
+        break;
+      case 'MediaFastForward':
+        logicalKey = LogicalKeyboardKey.mediaFastForward;
+        physicalKey = PhysicalKeyboardKey.mediaFastForward;
+        break;
     }
 
     if (logicalKey != null && physicalKey != null) {
