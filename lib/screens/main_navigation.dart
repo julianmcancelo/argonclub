@@ -315,7 +315,6 @@ class _TVRemoteStatusIndicatorState extends State<_TVRemoteStatusIndicator> {
   void dispose() {
     _codeSub?.cancel();
     _statusSub?.cancel();
-    _service.dispose();
     super.dispose();
   }
 

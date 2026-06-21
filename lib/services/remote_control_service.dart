@@ -5,19 +5,26 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'watch_party_service.dart';
 
 class RemoteControlService {
+  static final RemoteControlService _instance = RemoteControlService._internal();
+
+  factory RemoteControlService({String? endpoint}) {
+    return _instance;
+  }
+
+  RemoteControlService._internal()
+      : endpoint = WatchPartyService.defaultEndpoint;
+
   final String endpoint;
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _sub;
   bool _connected = false;
   String? _pairingCode;
   bool _paired = false;
+  Timer? _reconnectTimer;
 
   final StreamController<String> _pairingCodeController = StreamController<String>.broadcast();
   final StreamController<bool> _pairingStatusController = StreamController<bool>.broadcast();
   final StreamController<String> _remoteSearchController = StreamController<String>.broadcast();
-
-  RemoteControlService({String? endpoint})
-      : endpoint = endpoint ?? WatchPartyService.defaultEndpoint;
 
   bool get isConnected => _connected;
   bool get isPaired => _paired;
@@ -61,6 +68,14 @@ class RemoteControlService {
     _paired = false;
     _pairingCode = null;
     _pairingStatusController.add(false);
+
+    // Auto-reconnect after 3 seconds
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(const Duration(seconds: 3), () {
+      connect().then((_) {
+        registerTv();
+      }).catchError((_) {});
+    });
   }
 
   // TV Side: Request pairing code
@@ -168,33 +183,39 @@ class RemoteControlService {
 
     if (logicalKey != null && physicalKey != null) {
       try {
-        final timeStamp = Duration(milliseconds: DateTime.now().millisecondsSinceEpoch);
+        final timeMs = DateTime.now().millisecondsSinceEpoch;
         HardwareKeyboard.instance.handleKeyEvent(
           KeyDownEvent(
             physicalKey: physicalKey,
             logicalKey: logicalKey,
-            timeStamp: timeStamp,
+            timeStamp: Duration(milliseconds: timeMs),
           ),
         );
         HardwareKeyboard.instance.handleKeyEvent(
           KeyUpEvent(
             physicalKey: physicalKey,
             logicalKey: logicalKey,
-            timeStamp: timeStamp,
+            timeStamp: Duration(milliseconds: timeMs + 20),
           ),
         );
       } catch (_) {}
     }
   }
 
-  Future<void> dispose() async {
+  // Clean disconnect, keeps the controllers alive since it is a Singleton
+  Future<void> disconnect() async {
     _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     await _sub?.cancel();
+    _sub = null;
     await _channel?.sink.close();
-    await _pairingCodeController.close();
-    await _pairingStatusController.close();
-    await _remoteSearchController.close();
+    _channel = null;
+    _connected = false;
+    _paired = false;
+    _pairingCode = null;
   }
 
-  Timer? _reconnectTimer;
+  Future<void> dispose() async {
+    // No-op for Singleton to prevent accidental disposal by screens. Use disconnect() if needed.
+  }
 }

@@ -23,6 +23,8 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
   String? _pairingCode;
   String? _error;
   Timer? _retryTimer;
+  StreamSubscription? _pairingCodeSub;
+  StreamSubscription? _pairingStatusSub;
 
   @override
   void initState() {
@@ -39,7 +41,7 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
     try {
       await _service.connect();
       
-      _service.pairingCodeStream.listen((code) {
+      _pairingCodeSub = _service.pairingCodeStream.listen((code) {
         if (mounted) {
           setState(() {
             _pairingCode = code;
@@ -47,7 +49,7 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
         }
       });
 
-      _service.pairingStatusStream.listen((paired) {
+      _pairingStatusSub = _service.pairingStatusStream.listen((paired) {
         if (mounted) {
           setState(() {
             _paired = paired;
@@ -99,7 +101,8 @@ class _RemoteControlScreenState extends State<RemoteControlScreen> {
   @override
   void dispose() {
     _retryTimer?.cancel();
-    _service.dispose();
+    _pairingCodeSub?.cancel();
+    _pairingStatusSub?.cancel();
     _codeController.dispose();
     _searchController.dispose();
     super.dispose();
