@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/remote_control_service.dart';
+import '../theme/argon_theme.dart';
 
 class RemoteControlStatusCard extends StatefulWidget {
   final bool isTV;
@@ -26,6 +28,13 @@ class _RemoteControlStatusCardState extends State<RemoteControlStatusCard> {
   late String _device;
   String? _lastKey;
 
+  // Opacity controls
+  double _opacity = 1.0;
+  Timer? _fadeTimer;
+  bool _isHovered = false;
+
+  double get _baseOpacity => _paired ? 0.12 : 0.40;
+
   @override
   void initState() {
     super.initState();
@@ -33,18 +42,37 @@ class _RemoteControlStatusCardState extends State<RemoteControlStatusCard> {
     _code = _service.pairingCode;
     _device = _service.pairedDeviceLabel;
     _lastKey = _service.lastRemoteKey;
+
     _codeSub = _service.pairingCodeStream.listen((code) {
-      if (mounted) setState(() => _code = code);
+      if (mounted) {
+        setState(() => _code = code);
+        _showBriefly();
+      }
     });
     _statusSub = _service.pairingStatusStream.listen((paired) {
-      if (mounted) setState(() => _paired = paired);
+      if (mounted) {
+        setState(() => _paired = paired);
+        _showBriefly();
+      }
     });
     _deviceSub = _service.pairedDeviceStream.listen((device) {
-      if (mounted) setState(() => _device = device);
+      if (mounted) {
+        setState(() => _device = device);
+        _showBriefly();
+      }
     });
     _keySub = _service.remoteKeyStream.listen((key) {
-      if (mounted) setState(() => _lastKey = key);
+      if (mounted) {
+        setState(() => _lastKey = key);
+        _showBriefly();
+      }
     });
+
+    // Listen to physical TV remote or keyboard events to wake up the card
+    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+
+    // Initial show so it's fully visible at startup, then fades out
+    _showBriefly();
   }
 
   @override
@@ -53,102 +81,144 @@ class _RemoteControlStatusCardState extends State<RemoteControlStatusCard> {
     _statusSub?.cancel();
     _deviceSub?.cancel();
     _keySub?.cancel();
+    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+    _fadeTimer?.cancel();
     super.dispose();
+  }
+
+  bool _handleKeyEvent(KeyEvent event) {
+    _showBriefly();
+    return false; // Do not consume the key event
+  }
+
+  void _showBriefly() {
+    if (!mounted) return;
+    setState(() {
+      _opacity = 1.0;
+    });
+    _fadeTimer?.cancel();
+    if (!_isHovered) {
+      _fadeTimer = Timer(const Duration(seconds: 4), () {
+        if (mounted && !_isHovered) {
+          setState(() {
+            _opacity = _baseOpacity;
+          });
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final accent = _paired ? const Color(0xFF4ADE80) : const Color(0xFFF59E0B);
+    final accent = _paired ? ArgonTheme.sky : ArgonTheme.gold;
     final scale = widget.isTV ? 1.0 : 0.82;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      constraints: BoxConstraints(minWidth: widget.isTV ? 236 : 190),
-      padding: EdgeInsets.symmetric(
-        horizontal: 14 * scale,
-        vertical: 10 * scale,
-      ),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withValues(alpha: 0.55), width: 1.4),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.12),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36 * scale,
-            height: 36 * scale,
+    return MouseRegion(
+      onEnter: (_) {
+        _isHovered = true;
+        _showBriefly();
+      },
+      onExit: (_) {
+        _isHovered = false;
+        _showBriefly();
+      },
+      child: GestureDetector(
+        onTap: _showBriefly,
+        child: AnimatedOpacity(
+          opacity: _opacity,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            constraints: BoxConstraints(minWidth: widget.isTV ? 236 : 190),
+            padding: EdgeInsets.symmetric(
+              horizontal: 14 * scale,
+              vertical: 10 * scale,
+            ),
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
+              color: accent.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: accent.withValues(alpha: 0.55), width: 1.4),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.12),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
-            child: Icon(
-              _paired
-                  ? Icons.phonelink_ring_rounded
-                  : Icons.settings_remote_rounded,
-              color: accent,
-              size: 21 * scale,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36 * scale,
+                  height: 36 * scale,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _paired
+                        ? Icons.phonelink_ring_rounded
+                        : Icons.settings_remote_rounded,
+                    color: accent,
+                    size: 21 * scale,
+                  ),
+                ),
+                SizedBox(width: 11 * scale),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: accent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _paired ? 'CONTROL CONECTADO' : 'VINCULAR CONTROL',
+                          style: GoogleFonts.dmSans(
+                            color: accent,
+                            fontSize: 9 * scale,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.7,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 3 * scale),
+                    Text(
+                      _paired ? _device : 'PIN ${_code ?? '....'}',
+                      style: GoogleFonts.dmSans(
+                        color: Colors.white,
+                        fontSize: 15 * scale,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: _paired ? 0 : 2.2,
+                      ),
+                    ),
+                    Text(
+                      _paired
+                          ? 'Listo${_lastKey == null ? '' : ' · ${_labelForKey(_lastKey!)}'}'
+                          : 'Ingresa este código en el celular',
+                      style: GoogleFonts.dmSans(
+                        color: Colors.white70,
+                        fontSize: 9 * scale,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          SizedBox(width: 11 * scale),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: accent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _paired ? 'CONTROL CONECTADO' : 'VINCULAR CONTROL',
-                    style: GoogleFonts.dmSans(
-                      color: accent,
-                      fontSize: 9 * scale,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.7,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 3 * scale),
-              Text(
-                _paired ? _device : 'PIN ${_code ?? '....'}',
-                style: GoogleFonts.dmSans(
-                  color: Colors.white,
-                  fontSize: 15 * scale,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: _paired ? 0 : 2.2,
-                ),
-              ),
-              Text(
-                _paired
-                    ? 'Listo${_lastKey == null ? '' : ' · ${_labelForKey(_lastKey!)}'}'
-                    : 'Ingresa este código en el celular',
-                style: GoogleFonts.dmSans(
-                  color: Colors.white70,
-                  fontSize: 9 * scale,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
